@@ -22,7 +22,7 @@ func (h *Handlers) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if errApp := ValidationAuth(req.Login, req.Password); err != nil {
+	if errApp := ValidationAuth(req.Login, req.Password); errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed validation")
 		w.WriteHeader(http.StatusBadRequest)
 
@@ -65,7 +65,7 @@ func (h *Handlers) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if errApp := ValidationAuth(req.Login, req.Password); err != nil {
+	if errApp := ValidationAuth(req.Login, req.Password); errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed validation")
 		w.WriteHeader(http.StatusBadRequest)
 
