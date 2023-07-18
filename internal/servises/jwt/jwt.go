@@ -13,21 +13,21 @@ type TokenService interface {
 }
 
 type ServiceJWT struct {
-	secretKey          []byte
-	tokenExpirationSec time.Duration
+	secretKey       []byte
+	tokenExpiration time.Duration
 }
 
 func NewJWTService(secretKey string, tokenExpirationSec int) TokenService {
 	return &ServiceJWT{
-		secretKey:          []byte(secretKey),
-		tokenExpirationSec: time.Duration(tokenExpirationSec) * time.Second,
+		secretKey:       []byte(secretKey),
+		tokenExpiration: time.Duration(tokenExpirationSec) * time.Second,
 	}
 }
 
 func (s *ServiceJWT) GenerateToken(accountID string) (string, error) {
 	claims := jwt.MapClaims{
 		"account_id": accountID,
-		"exp":        time.Now().Add(s.tokenExpirationSec).Unix(),
+		"exp":        time.Now().Add(s.tokenExpiration).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

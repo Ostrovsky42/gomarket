@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"gomarket/internal/logger"
+	"gomarket/internal/context"
 	"gomarket/internal/servises/jwt"
 	"net/http"
 )
@@ -30,8 +30,9 @@ func (a *Auth) Auth(next http.Handler) http.Handler {
 			return
 
 		}
-		logger.Log.Info().Msg(accountID) //todo context
 
-		next.ServeHTTP(w, r)
+		ctx := context.WithAccountID(r.Context(), accountID)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

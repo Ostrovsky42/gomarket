@@ -17,3 +17,7 @@ func IsUniqueViolation(err error) bool {
 	}
 	return false
 }
+
+func IsNotFound(err error) bool {
+	return err.Error() == "no rows in result set"
+}

@@ -5,6 +5,7 @@ import "fmt"
 const (
 	BadRequestJSON      = "Bad request JSON"
 	FailedValidation    = "Failed validation"
+	NotFound            = "Resource not found"
 	InternalServerError = "Internal server error"
 	Unauthorized        = "Unauthorized"
 	UniquenessViolation = "Uniqueness Violation"
@@ -41,6 +42,10 @@ func NewErrInternal(details any) *ErrorApp {
 
 func NewErrUnauthorized() *ErrorApp {
 	return NewError(Unauthorized, "")
+}
+
+func NewErrNotFound() *ErrorApp {
+	return NewError(NotFound, "")
 }
 
 func NewErrUniquenessViolation(details any) *ErrorApp {

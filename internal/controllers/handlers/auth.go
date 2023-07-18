@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"gomarket/internal/errors"
 	"gomarket/internal/logger"
@@ -30,7 +29,7 @@ func (h *Handlers) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, errApp := h.accounts.CreateAccount(context.Background(), req.Login, h.hashServ.GetHash(req.Password))
+	id, errApp := h.accounts.CreateAccount(r.Context(), req.Login, h.hashServ.GetHash(req.Password)) //todo пользователя нет
 	if errApp != nil {
 		if errApp.Description() == errors.UniquenessViolation {
 			w.WriteHeader(http.StatusConflict)
@@ -73,14 +72,15 @@ func (h *Handlers) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	account, errApp := h.accounts.GetAccountByLogin(context.Background(), req.Login)
+	account, errApp := h.accounts.GetAccountByLogin(r.Context(), req.Login)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed create account")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if account.HashPass == h.hashServ.GetHash(req.Password) {
+	hash := h.hashServ.GetHash(req.Password)
+	if account.HashPass != hash {
 		logger.Log.Info().Msg("failed compare hash password")
 		w.WriteHeader(http.StatusUnauthorized)
 

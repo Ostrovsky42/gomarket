@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"regexp"
-
 	"gomarket/internal/errors"
+	"regexp"
+	"strconv"
 )
 
 const (
@@ -27,6 +27,14 @@ func ValidationAuth(login string, pass string) *errors.ErrorApp {
 	return nil
 }
 
+func ValidateLoadOrder(orderID string) *errors.ErrorApp {
+	if isValidOrderID(orderID) {
+		return errors.NewErrFailedValidation("invalid order_id")
+	}
+
+	return nil
+}
+
 func validateLogin(login string) *errors.ErrorApp {
 	if !loginMask.MatchString(login) {
 		return errors.NewErrFailedValidation("invalid login")
@@ -45,4 +53,26 @@ func validatePassword(password string) *errors.ErrorApp {
 	}
 
 	return nil
+}
+
+func isValidOrderID(orderID string) bool {
+	if _, err := strconv.Atoi(orderID); err != nil {
+		return true
+	}
+
+	sum := 0
+	alternate := false
+	for i := len(orderID) - 1; i >= 0; i-- {
+		digit := int(orderID[i] - '0')
+		if alternate {
+			digit *= 2
+			if digit > 9 {
+				digit -= 9
+			}
+		}
+		sum += digit
+		alternate = !alternate
+	}
+
+	return !(sum%10 == 0)
 }

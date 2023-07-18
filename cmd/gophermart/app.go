@@ -8,6 +8,7 @@ import (
 	"gomarket/internal/servises/jwt"
 	"gomarket/internal/storage/accunts"
 	"gomarket/internal/storage/db"
+	"gomarket/internal/storage/orders"
 	"net/http"
 )
 
@@ -24,11 +25,12 @@ func NewApp(cfg *config.Config) Application {
 	}
 
 	accRepo := accunts.NewAccountPG(pg)
+	orderRepo := orders.NewOrderPG(pg)
 	hashServ := hasher.NewHashGenerator(cfg.SignKey) //todo отдельный ключ
 	tokenServ := jwt.NewJWTService(cfg.SignKey, 600)
 
 	return Application{
-		handlers:   handlers.NewHandlers(hashServ, accRepo, tokenServ),
+		handlers:   handlers.NewHandlers(hashServ, accRepo, orderRepo, tokenServ),
 		serverHost: cfg.ServerHost,
 		signKey:    cfg.SignKey,
 	}
