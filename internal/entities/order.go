@@ -17,7 +17,7 @@ type Order struct {
 	AccountID  string    `json:"-"`
 	Status     string    `json:"status"`
 	UploadedAt time.Time `json:"uploaded_at"`
-	Points     *int      `json:"accrual,omitempty"`
+	Points     *float64  `json:"accrual,omitempty"`
 }
 
 func (o Order) MarshalJSON() ([]byte, error) {

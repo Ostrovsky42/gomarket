@@ -64,7 +64,7 @@ func (a *AccrualProcesser) processOrder(orderID string) error {
 	errApp := a.OrderRepository.UpdateAfterAccrual(context.Background(),
 		orderResponse.Order,
 		orderResponse.Status,
-		transferToCoins(orderResponse.Points),
+		orderResponse.Points,
 	)
 	if errApp != nil {
 		return errApp
@@ -90,8 +90,4 @@ func (a *AccrualProcesser) worker() {
 		}
 		a.wg.Wait()
 	}
-}
-
-func transferToCoins(val float64) int {
-	return int(100 * val)
 }

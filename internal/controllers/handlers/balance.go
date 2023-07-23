@@ -7,8 +7,8 @@ import (
 )
 
 type BalanceResponse struct {
-	Current   float64 `json:"current"`
-	Withdrawn *int    `json:"withdrawn,omitempty"`
+	Current   float64  `json:"current"`
+	Withdrawn *float64 `json:"withdrawn,omitempty"`
 }
 
 func (h *Handlers) GetBalance(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +38,7 @@ func (h *Handlers) GetBalance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	balanceResponse := BalanceResponse{
-		Current:   transferFromCoins(current),
+		Current:   current,
 		Withdrawn: withdrawSum,
 	}
 

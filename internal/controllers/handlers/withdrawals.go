@@ -35,7 +35,7 @@ func (h *Handlers) UsePoints(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errApp = h.accounts.UpdateAccountBalance(r.Context(), accountID, transferToNegativeCoins(req.Sum))
+	errApp = h.accounts.UpdateAccountBalance(r.Context(), accountID, transferToNegative(req.Sum))
 	if errApp != nil {
 		if errApp.Description() == errors.InsufficientFunds {
 			w.WriteHeader(http.StatusPaymentRequired)
@@ -49,7 +49,7 @@ func (h *Handlers) UsePoints(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errApp = h.withdraw.CreateWithdraw(ctx, accountID, req.OrderID, transferToCoins(req.Sum))
+	errApp = h.withdraw.CreateWithdraw(ctx, accountID, req.OrderID, req.Sum)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed create withdraw")
 		w.WriteHeader(http.StatusInternalServerError)

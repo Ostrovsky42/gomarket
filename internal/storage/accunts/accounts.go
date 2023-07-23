@@ -12,8 +12,8 @@ import (
 type AccountRepository interface {
 	CreateAccount(ctx context.Context, login string, hashPass string) (string, *errors.ErrorApp)
 	GetAccountByLogin(ctx context.Context, login string) (entities.Account, *errors.ErrorApp)
-	GetAccountBalance(ctx context.Context, accountID string) (int, *errors.ErrorApp)
-	UpdateAccountBalance(ctx context.Context, accountID string, sum int) *errors.ErrorApp
+	GetAccountBalance(ctx context.Context, accountID string) (float64, *errors.ErrorApp)
+	UpdateAccountBalance(ctx context.Context, accountID string, sum float64) *errors.ErrorApp
 }
 
 var _ AccountRepository = &AccountPG{}
@@ -70,23 +70,27 @@ func (a *AccountPG) GetAccountByLogin(ctx context.Context, login string) (entiti
 	return acc, nil
 }
 
-func (a *AccountPG) GetAccountBalance(ctx context.Context, accountID string) (int, *errors.ErrorApp) {
+func (a *AccountPG) GetAccountBalance(ctx context.Context, accountID string) (float64, *errors.ErrorApp) {
 	ctx, cancel := context.WithTimeout(ctx, storage.DefaultQueryTimeout)
 	defer cancel()
 
 	q := `SELECT points FROM accounts WHERE id = $1;`
-	var balance int
+	var balance float64
 	err := a.pg.DB.QueryRow(ctx, q,
 		accountID,
 	).Scan(&balance)
 	if err != nil {
+		if storage.IsNotFound(err) {
+			return 0, nil
+		}
+
 		return 0, errors.NewErrInternal(err.Error())
 	}
 
 	return balance, nil
 }
 
-func (a *AccountPG) UpdateAccountBalance(ctx context.Context, accountID string, sum int) *errors.ErrorApp {
+func (a *AccountPG) UpdateAccountBalance(ctx context.Context, accountID string, sum float64) *errors.ErrorApp {
 	ctx, cancel := context.WithTimeout(ctx, storage.DefaultQueryTimeout)
 	defer cancel()
 
@@ -96,7 +100,7 @@ func (a *AccountPG) UpdateAccountBalance(ctx context.Context, accountID string, 
 	}
 	defer tx.Rollback(ctx)
 
-	var points int
+	var points float64
 	q := `SELECT points FROM accounts WHERE id = $1 FOR UPDATE`
 	err = tx.QueryRow(ctx, q,
 		accountID,

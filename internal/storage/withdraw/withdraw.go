@@ -10,9 +10,9 @@ import (
 )
 
 type WithDrawRepository interface {
-	CreateWithdraw(ctx context.Context, accountID string, orderID string, points int) *errors.ErrorApp
+	CreateWithdraw(ctx context.Context, accountID string, orderID string, points float64) *errors.ErrorApp
 	GetWithdraw(ctx context.Context, accountID string) ([]entities.Withdraw, *errors.ErrorApp)
-	GetWithdrawSum(ctx context.Context, accountID string) (*int, *errors.ErrorApp)
+	GetWithdrawSum(ctx context.Context, accountID string) (*float64, *errors.ErrorApp)
 }
 
 var _ WithDrawRepository = &WithDrawPG{}
@@ -27,7 +27,7 @@ func NewAccountPG(db *db.Postgres) *WithDrawPG {
 	}
 }
 
-func (w *WithDrawPG) CreateWithdraw(ctx context.Context, accountID string, orderID string, points int) *errors.ErrorApp {
+func (w *WithDrawPG) CreateWithdraw(ctx context.Context, accountID string, orderID string, points float64) *errors.ErrorApp {
 	ctx, cancel := context.WithTimeout(ctx, storage.DefaultQueryTimeout)
 	defer cancel()
 
@@ -61,17 +61,17 @@ func (w *WithDrawPG) GetWithdraw(ctx context.Context, accountID string) ([]entit
 		return nil, errors.NewErrInternal(err.Error())
 	}
 
-	//var orID int
 	defer rows.Close()
 	var withdraw []entities.Withdraw
 	for rows.Next() {
 		var wd entities.Withdraw
+		var sum int
 		err = rows.Scan(
 			&wd.OrderID,
-			&wd.Sum,
+			&sum,
 			&wd.ProcessedAt,
 		)
-		//wd.OrderID = string(orID)
+		wd.Sum = float64(sum)
 		if err == nil {
 			withdraw = append(withdraw, wd)
 		}
@@ -83,11 +83,11 @@ func (w *WithDrawPG) GetWithdraw(ctx context.Context, accountID string) ([]entit
 	return withdraw, nil
 }
 
-func (w *WithDrawPG) GetWithdrawSum(ctx context.Context, accountID string) (*int, *errors.ErrorApp) {
+func (w *WithDrawPG) GetWithdrawSum(ctx context.Context, accountID string) (*float64, *errors.ErrorApp) {
 	ctx, cancel := context.WithTimeout(ctx, storage.DefaultQueryTimeout)
 	defer cancel()
 
-	var sum *int
+	var sum *float64
 	q := `SELECT SUM(points) FROM withdraws WHERE account_id=$1`
 	err := w.pg.DB.QueryRow(ctx, q,
 		accountID,

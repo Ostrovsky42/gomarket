@@ -16,7 +16,7 @@ type OrderRepository interface {
 	GetOrderByID(ctx context.Context, orderID string) (*entities.Order, *errors.ErrorApp)
 	GetOrdersByAccountID(ctx context.Context, accountID string) ([]entities.Order, *errors.ErrorApp)
 	GetOrderIDsForAccrual(ctx context.Context) ([]string, *errors.ErrorApp)
-	UpdateAfterAccrual(ctx context.Context, orderID string, status string, points int) *errors.ErrorApp
+	UpdateAfterAccrual(ctx context.Context, orderID string, status string, points float64) *errors.ErrorApp
 }
 
 var _ OrderRepository = &OrderPG{}
@@ -158,7 +158,7 @@ func (o *OrderPG) GetOrderIDsForAccrual(ctx context.Context) ([]string, *errors.
 	return orderIDs, nil
 }
 
-func (o *OrderPG) UpdateAfterAccrual(ctx context.Context, orderID string, status string, points int) *errors.ErrorApp {
+func (o *OrderPG) UpdateAfterAccrual(ctx context.Context, orderID string, status string, points float64) *errors.ErrorApp {
 	ctx, cancel := context.WithTimeout(ctx, storage.DefaultQueryTimeout)
 	defer cancel()
 
