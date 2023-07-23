@@ -26,7 +26,10 @@ func (a Application) NewRoutes(signKey string) *chi.Mux {
 	r.Group(func(apiRoute chi.Router) {
 		apiRoute.Use(middleware.WithLogging, zipMW.Zip, zipMW.UnZip, auth.Auth)
 		apiRoute.Post(`/api/user/orders`, a.handlers.LoadOrderHandler)
-
+		apiRoute.Get(`/api/user/orders`, a.handlers.GetOrderHandler)
+		apiRoute.Get(`/api/user/balance`, a.handlers.GetBalance)
+		apiRoute.Post(`/api/user/balance/withdraw`, a.handlers.UsePoints)
+		apiRoute.Get(`/api/user/withdrawals`, a.handlers.UsePointsInfo)
 	})
 
 	r.NotFoundHandler()

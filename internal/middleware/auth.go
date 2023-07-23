@@ -4,6 +4,7 @@ import (
 	"gomarket/internal/context"
 	"gomarket/internal/servises/jwt"
 	"net/http"
+	"strings"
 )
 
 type Auth struct {
@@ -16,19 +17,19 @@ func NewAuthMiddleware(secretKey string, ttlSec int) *Auth {
 
 func (a *Auth) Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("jwt")
-		if err != nil {
+		rawJWT := r.Header.Get("Authorization")
+		token, ok := strings.CutPrefix(rawJWT, "Bearer ")
+		if !ok {
 			w.WriteHeader(http.StatusUnauthorized)
 
 			return
 		}
 
-		accountID, err := a.tokenService.VerifyToken(cookie.Value)
+		accountID, err := a.tokenService.VerifyToken(token)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 
 			return
-
 		}
 
 		ctx := context.WithAccountID(r.Context(), accountID)

@@ -1,6 +1,9 @@
 package entities
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 const (
 	New = iota + 1
@@ -17,13 +20,26 @@ var statusTable = map[int]string{
 }
 
 type Order struct {
-	ID         int
-	AccountID  string
-	Status     int
-	UploadedAt time.Time
-	Points     *int
+	ID         string    `json:"number"`
+	AccountID  string    `json:"-"`
+	Status     int       `json:"status"`
+	UploadedAt time.Time `json:"uploaded_at"`
+	Points     *int      `json:"accrual,omitempty"`
 }
 
-func GetStatus(status int) string {
+func getStatus(status int) string {
 	return statusTable[status]
+}
+
+func (o Order) MarshalJSON() ([]byte, error) {
+	type OrderAlias Order
+	return json.Marshal(&struct {
+		OrderAlias
+		UploadedAt string `json:"uploaded_at"`
+		Status     string `json:"status"`
+	}{
+		OrderAlias: OrderAlias(o),
+		UploadedAt: o.UploadedAt.Format(time.RFC3339),
+		Status:     getStatus(o.Status),
+	})
 }

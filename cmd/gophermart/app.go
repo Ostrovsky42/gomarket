@@ -4,11 +4,13 @@ import (
 	"gomarket/config"
 	"gomarket/internal/controllers/handlers"
 	"gomarket/internal/logger"
+	"gomarket/internal/servises/accrual"
 	"gomarket/internal/servises/hasher"
 	"gomarket/internal/servises/jwt"
 	"gomarket/internal/storage/accunts"
 	"gomarket/internal/storage/db"
 	"gomarket/internal/storage/orders"
+	"gomarket/internal/storage/withdraw"
 	"net/http"
 )
 
@@ -26,11 +28,20 @@ func NewApp(cfg *config.Config) Application {
 
 	accRepo := accunts.NewAccountPG(pg)
 	orderRepo := orders.NewOrderPG(pg)
+	withdrawRepo := withdraw.NewAccountPG(pg)
 	hashServ := hasher.NewHashGenerator(cfg.SignKey) //todo отдельный ключ
-	tokenServ := jwt.NewJWTService(cfg.SignKey, 600)
+	accrualCli := accrual.NewAccrual(cfg.AccrualHost, orderRepo)
+	tokenServ := jwt.NewJWTService(cfg.SignKey, 600000000)
 
+	accrualCli.Run()
 	return Application{
-		handlers:   handlers.NewHandlers(hashServ, accRepo, orderRepo, tokenServ),
+		handlers: handlers.NewHandlers(
+			hashServ,
+			accRepo,
+			orderRepo,
+			withdrawRepo,
+			tokenServ,
+		),
 		serverHost: cfg.ServerHost,
 		signKey:    cfg.SignKey,
 	}

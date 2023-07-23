@@ -9,6 +9,7 @@ const (
 	InternalServerError = "Internal server error"
 	Unauthorized        = "Unauthorized"
 	UniquenessViolation = "Uniqueness Violation"
+	InsufficientFunds   = "Insufficient funds"
 )
 
 type ErrorApp struct {
@@ -46,6 +47,9 @@ func NewErrUnauthorized() *ErrorApp {
 
 func NewErrNotFound() *ErrorApp {
 	return NewError(NotFound, "")
+}
+func NewErrInsufficientFunds() *ErrorApp {
+	return NewError(InsufficientFunds, "")
 }
 
 func NewErrUniquenessViolation(details any) *ErrorApp {

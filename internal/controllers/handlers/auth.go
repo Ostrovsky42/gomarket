@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"gomarket/internal/errors"
 	"gomarket/internal/logger"
 	"net/http"
@@ -42,15 +43,12 @@ func (h *Handlers) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwt, err := h.tokenServ.GenerateToken(id)
-	if err != nil {
+	if err = h.setJWT(w, id); err != nil {
 		logger.Log.Error().Err(err).Msg("failed generate jwt token")
 		w.WriteHeader(http.StatusInternalServerError)
 
 		return
 	}
-
-	setJWT(w, jwt)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -87,28 +85,22 @@ func (h *Handlers) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwt, err := h.tokenServ.GenerateToken(account.ID)
-	if err != nil {
+	if err = h.setJWT(w, account.ID); err != nil {
 		logger.Log.Error().Err(err).Msg("failed generate jwt token")
 		w.WriteHeader(http.StatusInternalServerError)
 
 		return
 	}
 
-	setJWT(w, jwt)
-
 	w.WriteHeader(http.StatusOK)
 }
 
-func setJWT(w http.ResponseWriter, jwt string) {
-	cookie := &http.Cookie{
-		Name:     "jwt",
-		Value:    jwt,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+func (h *Handlers) setJWT(w http.ResponseWriter, accountID string) error {
+	jwt, err := h.tokenServ.GenerateToken(accountID)
+	if err != nil {
+		return err
 	}
+	w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", jwt))
 
-	http.SetCookie(w, cookie)
+	return nil
 }

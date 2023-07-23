@@ -2,14 +2,15 @@ package handlers
 
 import (
 	"encoding/json"
+	"gomarket/internal/entities"
 	"gomarket/internal/errors"
 	"gomarket/internal/logger"
+
 	"net/http"
-	"strconv"
 )
 
-func (h *Handlers) LoadOrderHandler(w http.ResponseWriter, r *http.Request) {
-	var req int
+func (h *Handlers) UsePoints(w http.ResponseWriter, r *http.Request) {
+	var req entities.Withdraw
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		logger.Log.Error().Err(err).Msg("failed decode body")
@@ -27,49 +28,40 @@ func (h *Handlers) LoadOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orderID := strconv.Itoa(req)
-	if errApp = ValidateLoadOrder(orderID); errApp != nil {
+	if errApp = ValidateLoadOrder(req.OrderID); errApp != nil { //todo  use points
 		logger.Log.Error().Err(errApp).Msg("failed validation")
-		w.WriteHeader(http.StatusUnprocessableEntity)
+		w.WriteHeader(http.StatusBadRequest)
 
 		return
 	}
 
-	order, errApp := h.orders.GetOrderByID(ctx, orderID)
+	errApp = h.accounts.UpdateAccountBalance(r.Context(), accountID, getNegative(req.Sum))
 	if errApp != nil {
-		if errApp.Description() != errors.NotFound {
-			logger.Log.Error().Err(errApp).Msg("failed get order")
-			w.WriteHeader(http.StatusInternalServerError)
+		if errApp.Description() == errors.InsufficientFunds {
+			w.WriteHeader(http.StatusPaymentRequired)
 
 			return
 		}
-	}
 
-	if order != nil {
-		if order.AccountID != accountID {
-			w.WriteHeader(http.StatusConflict)
-
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-
-		return
-	}
-
-	logger.Log.Debug().Interface(orderID, order).Msg("oredr")
-
-	errApp = h.orders.CreateOrder(ctx, orderID, accountID)
-	if errApp != nil {
-		logger.Log.Error().Err(errApp).Msg("failed create order")
+		logger.Log.Error().Err(errApp).Msg("failed update balance")
 		w.WriteHeader(http.StatusInternalServerError)
 
 		return
 	}
 
-	w.WriteHeader(http.StatusAccepted)
+	errApp = h.withdraw.CreateWithdraw(ctx, accountID, req.OrderID, req.Sum)
+	if errApp != nil {
+		logger.Log.Error().Err(errApp).Msg("failed create withdraw")
+		w.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	//todo create order?
 }
 
-func (h *Handlers) GetOrderHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) UsePointsInfo(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	accountID, errApp := getAccountID(ctx)
 	if errApp != nil {
@@ -79,22 +71,21 @@ func (h *Handlers) GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orders, errApp := h.orders.GetOrdersByAccountID(ctx, accountID)
+	withdraw, errApp := h.withdraw.GetWithdraw(ctx, accountID)
 	if errApp != nil {
-		logger.Log.Error().Err(errApp).Msg("failed get orders by account_id")
+		logger.Log.Error().Err(errApp).Msg("failed get withdrawals")
 		w.WriteHeader(http.StatusInternalServerError)
 
 		return
 	}
 
-	if len(orders) == 0 {
+	if len(withdraw) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 
 		return
-
 	}
 
-	jsonData, err := json.Marshal(orders)
+	jsonData, err := json.Marshal(withdraw)
 	if err != nil {
 		logger.Log.Error().Err(err).Msg("failed to marshal JSON response")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -103,7 +94,6 @@ func (h *Handlers) GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setJSONContentType(w)
-
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }
