@@ -19,9 +19,9 @@ type AccrualProcesser struct {
 }
 
 type OrderResponse struct {
-	Order  string `json:"order"`
-	Status string `json:"status"`
-	Points int    `json:"accrual"`
+	Order  string  `json:"order"`
+	Status string  `json:"status"`
+	Points float64 `json:"accrual"`
 }
 
 func NewAccrual(baseURL string, repository orders.OrderRepository) *AccrualProcesser {
@@ -51,7 +51,7 @@ func (a *AccrualProcesser) processOrder(orderID string) error {
 	}
 
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK || resp.StatusCode == http.StatusTooManyRequests {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode) //todo more attempt
 	}
 
@@ -64,7 +64,7 @@ func (a *AccrualProcesser) processOrder(orderID string) error {
 	errApp := a.OrderRepository.UpdateAfterAccrual(context.Background(),
 		orderResponse.Order,
 		orderResponse.Status,
-		orderResponse.Points,
+		transferToCoins(orderResponse.Points),
 	)
 	if errApp != nil {
 		return errApp
@@ -90,4 +90,8 @@ func (a *AccrualProcesser) worker() {
 		}
 		a.wg.Wait()
 	}
+}
+
+func transferToCoins(val float64) int {
+	return int(100 * val)
 }
