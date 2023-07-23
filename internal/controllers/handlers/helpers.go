@@ -25,8 +25,12 @@ func getAccountID(ctx contextStd.Context) (string, *errors.ErrorApp) {
 	return "", errors.NewError("account_id is empty", nil)
 }
 
-func getNegative(val int) int {
-	return -1 * val
+func transferToNegativeCoins(val float64) int {
+	return int(-100 * val)
+}
+
+func transferToCoins(val float64) int {
+	return int(100 * val)
 }
 
 func transferFromCoins(coins int) float64 {

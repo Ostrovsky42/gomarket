@@ -90,6 +90,4 @@ func (a *AccrualProcesser) worker() {
 		}
 		a.wg.Wait()
 	}
-
-	time.Sleep(5 * time.Second)
 }

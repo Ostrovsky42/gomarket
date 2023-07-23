@@ -10,7 +10,7 @@ const (
 	MinNumLogin = 4
 	MaxNumLogin = 20
 	MinNumPass  = 6
-	MaxNumPass  = 20
+	MaxNumPass  = 40
 )
 
 var loginMask = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
