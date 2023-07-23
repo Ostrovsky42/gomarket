@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+const Bearer = "Bearer "
+
 type Auth struct {
 	tokenService jwt.TokenService
 }
@@ -18,13 +20,7 @@ func NewAuthMiddleware(secretKey string, ttlSec int) *Auth {
 func (a *Auth) Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rawJWT := r.Header.Get("Authorization")
-		token, ok := strings.CutPrefix(rawJWT, "Bearer ")
-		if !ok {
-			w.WriteHeader(http.StatusUnauthorized)
-
-			return
-		}
-
+		token := strings.TrimPrefix(rawJWT, Bearer)
 		accountID, err := a.tokenService.VerifyToken(token)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)

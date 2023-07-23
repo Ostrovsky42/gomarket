@@ -34,61 +34,25 @@ func NewAccrual(baseURL string, repository orders.OrderRepository) *AccrualProce
 	}
 }
 
-//func (a *AccrualProcesser) GetOrder(orderNumber string) (*OrderResponse, error) {
-//	url := fmt.Sprintf("%s/api/orders/%s", a.BaseURL, orderNumber)
-//
-//	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	resp, err := a.HTTPClient.Do(req)
-//	if err != nil {
-//		return nil, err
-//	}
-//	defer resp.Body.Close()
-//
-//	if resp.StatusCode != http.StatusOK {
-//		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-//	}
-//
-//	var orderResponse OrderResponse
-//	err = json.NewDecoder(resp.Body).Decode(&orderResponse)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &orderResponse, nil
-//}
-
 func (a *AccrualProcesser) Run() {
 	go a.worker()
 }
 
 func (a *AccrualProcesser) processOrder(orderID string) error {
 	url := fmt.Sprintf("%s/api/orders/%s", a.BaseURL, orderID)
-
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
 	if err != nil {
-		//return nil, err
+		return err
 	}
 
 	resp, err := a.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
+
 	defer resp.Body.Close()
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-
-	case http.StatusNoContent:
-	case http.StatusTooManyRequests:
-
-	}
-
 	if resp.StatusCode != http.StatusOK {
-		//return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode) //todo more attempt
 	}
 
 	var orderResponse OrderResponse
@@ -103,7 +67,7 @@ func (a *AccrualProcesser) processOrder(orderID string) error {
 		orderResponse.Points,
 	)
 	if errApp != nil {
-
+		return errApp
 	}
 
 	return nil
