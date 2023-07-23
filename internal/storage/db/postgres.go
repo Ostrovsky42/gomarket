@@ -36,8 +36,8 @@ func NewPostgresDB(dsn string) (*Postgres, error) {
 }
 
 func (p *Postgres) Close() {
-	logger.Log.Info().Msg("CLOSE DB")
 	p.DB.Close()
+	logger.Log.Info().Msg("db closed")
 }
 
 func (p *Postgres) upMigration() {

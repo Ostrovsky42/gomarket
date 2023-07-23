@@ -56,8 +56,6 @@ func (h *Handlers) LoadOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Log.Debug().Interface(orderID, order).Msg("oredr")
-
 	errApp = h.orders.CreateOrder(ctx, orderID, accountID)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed create order")

@@ -5,10 +5,12 @@ CREATE TABLE accounts (
     points INT NOT NULL DEFAULT 0
 );
 
+CREATE TYPE order_status AS enum ('NEW','PROCESSING', 'INVALID', 'PROCESSED');
+
 CREATE TABLE orders (
     id VARCHAR PRIMARY KEY,
     account_id UUID REFERENCES accounts (id),
-    status INT NOT NULL,
+    status order_status NOT NULL,
     uploaded_at TIMESTAMP NOT NULL,
     points INT,
 

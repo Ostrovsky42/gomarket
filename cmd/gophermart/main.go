@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"gomarket/config"
 	"gomarket/internal/logger"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -13,5 +16,8 @@ func main() {
 
 	app := NewApp(cfg)
 
-	app.Run()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	app.Run(ctx)
 }
