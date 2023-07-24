@@ -127,7 +127,6 @@ func (o *OrderPG) GetOrderIDsForAccrual(ctx context.Context) ([]string, *errors.
 	q := `SELECT id  FROM orders WHERE status IN ($1)`
 	rows, err := o.pg.DB.Query(ctx, q,
 		entities.New,
-		//entities.Processed,
 	)
 	if err != nil {
 		if stdErr.Is(err, pgx.ErrNoRows) {

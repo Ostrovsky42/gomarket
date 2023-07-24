@@ -2,6 +2,7 @@ package accunts
 
 import (
 	"context"
+	"gomarket/internal/logger"
 
 	"gomarket/internal/entities"
 	"gomarket/internal/errors"
@@ -90,7 +91,7 @@ func (a *AccountPG) GetAccountBalance(ctx context.Context, accountID string) (fl
 	return balance, nil
 }
 
-func (a *AccountPG) UpdateAccountBalance(ctx context.Context, accountID string, sum float64) *errors.ErrorApp {
+func (a *AccountPG) UpdateAccountBalance(ctx context.Context, accountID string, delta float64) *errors.ErrorApp {
 	ctx, cancel := context.WithTimeout(ctx, storage.DefaultQueryTimeout)
 	defer cancel()
 
@@ -100,24 +101,28 @@ func (a *AccountPG) UpdateAccountBalance(ctx context.Context, accountID string, 
 	}
 	defer tx.Rollback(ctx)
 
-	var points float64
+	var balance float64
 	q := `SELECT points FROM accounts WHERE id = $1 FOR UPDATE`
 	err = tx.QueryRow(ctx, q,
 		accountID,
-	).Scan(&points)
+	).Scan(&balance)
 	if err != nil {
 		return errors.NewErrInternal(err.Error())
 	}
+	logger.Log.Debug().
+		Interface("balance", balance).
+		Interface("delta", delta).
+		Interface("sum", balance+delta).Send()
 
-	if points+sum < 0 {
+	if balance+delta < 0 {
 		return errors.NewErrInsufficientFunds()
 	}
 
-	q = `UPDATE accounts SET points = points + $2 WHERE id = $1 RETURNING points`
-	err = tx.QueryRow(ctx, q,
+	q = `UPDATE accounts SET points = $2 WHERE id = $1`
+	_, err = tx.Query(ctx, q,
 		accountID,
-		sum,
-	).Scan(&points)
+		delta,
+	)
 	if err != nil {
 		return errors.NewErrInternal(err.Error())
 	}
