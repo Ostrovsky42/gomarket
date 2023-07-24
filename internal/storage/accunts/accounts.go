@@ -112,7 +112,7 @@ func (a *AccountPG) UpdateAccountBalance(ctx context.Context, accountID string, 
 	}
 
 	q = `UPDATE accounts SET points = $2 WHERE id = $1`
-	_, err = tx.Exec(ctx, q, accountID, delta)
+	_, err = tx.Exec(ctx, q, accountID, balance+delta)
 	if err != nil {
 		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())

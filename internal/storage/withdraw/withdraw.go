@@ -65,13 +65,11 @@ func (w *WithDrawPG) GetWithdraw(ctx context.Context, accountID string) ([]entit
 	var withdraw []entities.Withdraw
 	for rows.Next() {
 		var wd entities.Withdraw
-		var sum int
 		err = rows.Scan(
 			&wd.OrderID,
-			&sum,
+			&wd.Sum,
 			&wd.ProcessedAt,
 		)
-		wd.Sum = float64(sum)
 		if err == nil {
 			withdraw = append(withdraw, wd)
 		}
