@@ -38,41 +38,6 @@ func (a *AccrualProcesser) Run() {
 	go a.worker()
 }
 
-func (a *AccrualProcesser) processOrder(orderID string) error {
-	url := fmt.Sprintf("%s/api/orders/%s", a.BaseURL, orderID)
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := a.HTTPClient.Do(req)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK || resp.StatusCode == http.StatusTooManyRequests {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode) //todo more attempt
-	}
-
-	var orderResponse OrderResponse
-	err = json.NewDecoder(resp.Body).Decode(&orderResponse)
-	if err != nil {
-		return err
-	}
-
-	errApp := a.OrderRepository.UpdateAfterAccrual(context.Background(),
-		orderResponse.Order,
-		orderResponse.Status,
-		orderResponse.Points,
-	)
-	if errApp != nil {
-		return errApp
-	}
-
-	return nil
-}
-
 func (a *AccrualProcesser) worker() {
 	for {
 		orderIDs, errApp := a.OrderRepository.GetOrderIDsForAccrual(context.Background())
@@ -90,4 +55,48 @@ func (a *AccrualProcesser) worker() {
 		}
 		a.wg.Wait()
 	}
+}
+
+func (a *AccrualProcesser) processOrder(orderID string) error {
+	url := fmt.Sprintf("%s/api/orders/%s", a.BaseURL, orderID)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+
+	maxAttempts := 3
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		resp, err := a.HTTPClient.Do(req)
+		if err != nil {
+			logger.Log.Error().Err(err).Msg("err make request")
+
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusOK {
+			var orderResponse OrderResponse
+			err = json.NewDecoder(resp.Body).Decode(&orderResponse)
+			if err != nil {
+				return err
+			}
+
+			errApp := a.OrderRepository.UpdateAfterAccrual(context.Background(),
+				orderResponse.Order,
+				orderResponse.Status,
+				orderResponse.Points,
+			)
+			if errApp != nil {
+				return errApp
+			}
+
+			return nil
+		}
+		logger.Log.Info().Int("status_code", resp.StatusCode).Msg("unexpected status code")
+		time.Sleep(2 * time.Second)
+	}
+
+	return fmt.Errorf("maximum number of attempts reached, request failed")
 }
