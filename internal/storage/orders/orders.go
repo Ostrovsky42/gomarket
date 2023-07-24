@@ -6,6 +6,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"gomarket/internal/entities"
 	"gomarket/internal/errors"
+	"gomarket/internal/logger"
 	"gomarket/internal/storage"
 	"gomarket/internal/storage/db"
 	"time"
@@ -179,12 +180,27 @@ func (o *OrderPG) UpdateAfterAccrual(ctx context.Context, orderID string, status
 		return errors.NewErrInternal(err.Error())
 	}
 
-	q = `UPDATE accounts SET points = points + $2 where id = $1`
+	var balance float64
+	q = `SELECT points FROM accounts WHERE id = $1 FOR UPDATE`
+	err = tx.QueryRow(ctx, q,
+		accountID,
+	).Scan(&balance)
+	if err != nil {
+		return errors.NewErrInternal(err.Error())
+	}
+
+	logger.Log.Debug().
+		Interface("balance", balance).
+		Interface("points", points).
+		Interface("balance+points", balance+points).
+		Send()
+
+	q = `UPDATE accounts SET points = $2 where id = $1`
 	_, err = tx.Exec(
 		ctx,
 		q,
 		accountID,
-		points,
+		balance+points,
 	)
 
 	if err != nil {
