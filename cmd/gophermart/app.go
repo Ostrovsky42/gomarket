@@ -25,7 +25,7 @@ type Application struct {
 	pg         *db.Postgres
 }
 
-func NewApp(cfg *config.Config) Application {
+func NewApp(cfg *config.Config) *Application {
 	pg, err := db.NewPostgresDB(cfg.DSN)
 	if err != nil {
 		logger.Log.Fatal().Err(err).Msg("failed init storage")
@@ -36,7 +36,7 @@ func NewApp(cfg *config.Config) Application {
 	tokenServ := jwt.NewJWTService(cfg.SignKey, tokenLife)
 	accrualCli := accrual.NewAccrual(cfg.AccrualHost, repo.Orders)
 
-	return Application{
+	return &Application{
 		httpServer: &http.Server{
 			Addr: cfg.ServerHost,
 			Handler: NewRoutes(cfg.SignKey, handlers.NewHandlers(

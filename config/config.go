@@ -30,6 +30,7 @@ func GetConfig() *Config {
 		logger.Log.Fatal().Msg("err parse environment variable to server config")
 	}
 
+	logger.Log.Info().Interface("cfg", cfg).Msg("start with config")
 	return &cfg
 }
 
