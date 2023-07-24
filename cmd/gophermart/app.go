@@ -5,13 +5,11 @@ import (
 	"gomarket/config"
 	"gomarket/internal/controllers/handlers"
 	"gomarket/internal/logger"
+	"gomarket/internal/repositry"
 	"gomarket/internal/servises/accrual"
 	"gomarket/internal/servises/hasher"
 	"gomarket/internal/servises/jwt"
-	"gomarket/internal/storage/accunts"
 	"gomarket/internal/storage/db"
-	"gomarket/internal/storage/orders"
-	"gomarket/internal/storage/withdraws"
 	"net/http"
 	"time"
 )
@@ -33,22 +31,17 @@ func NewApp(cfg *config.Config) Application {
 		logger.Log.Fatal().Err(err).Msg("failed init storage")
 	}
 
-	accRepo := accunts.NewAccountPG(pg)
-	orderRepo := orders.NewOrderPG(pg)
-	withdrawRepo := withdraws.NewAccountPG(pg)
+	repo := repositry.NewRepo(pg)
 	hashServ := hasher.NewHashGenerator(cfg.SignKey)
-	accrualCli := accrual.NewAccrual(cfg.AccrualHost, orderRepo)
 	tokenServ := jwt.NewJWTService(cfg.SignKey, tokenLife)
+	accrualCli := accrual.NewAccrual(cfg.AccrualHost, repo.Orders)
 
-	accrualCli.Run()
 	return Application{
 		httpServer: &http.Server{
 			Addr: cfg.ServerHost,
 			Handler: NewRoutes(cfg.SignKey, handlers.NewHandlers(
 				hashServ,
-				accRepo,
-				orderRepo,
-				withdrawRepo,
+				repo,
 				tokenServ,
 			))},
 		pg:         pg,
@@ -62,6 +55,7 @@ func (a *Application) Run(ctx context.Context) {
 			logger.Log.Fatal().Err(err).Msg("Error start serve")
 		}
 	}()
+
 	a.accrualCli.Run()
 
 	<-ctx.Done()

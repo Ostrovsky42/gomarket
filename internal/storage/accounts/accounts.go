@@ -1,4 +1,4 @@
-package accunts
+package accounts
 
 import (
 	"context"

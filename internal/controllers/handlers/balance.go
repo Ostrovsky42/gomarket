@@ -21,7 +21,7 @@ func (h *Handlers) GetBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	current, errApp := h.accounts.GetAccountBalance(ctx, accountID)
+	current, errApp := h.repo.Accounts.GetAccountBalance(ctx, accountID)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed get account balance")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -29,7 +29,7 @@ func (h *Handlers) GetBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	withdrawSum, errApp := h.withdraw.GetWithdrawSum(ctx, accountID)
+	withdrawSum, errApp := h.repo.Withdraws.GetWithdrawSum(ctx, accountID)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed get withdraw sum")
 		w.WriteHeader(http.StatusInternalServerError)

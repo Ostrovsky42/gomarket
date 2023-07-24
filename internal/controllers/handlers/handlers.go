@@ -1,32 +1,24 @@
 package handlers
 
 import (
+	"gomarket/internal/repositry"
 	"gomarket/internal/servises/hasher"
 	"gomarket/internal/servises/jwt"
-	"gomarket/internal/storage/accunts"
-	"gomarket/internal/storage/orders"
-	"gomarket/internal/storage/withdraws"
 )
 
 type Handlers struct {
-	accounts  accunts.AccountRepository
-	orders    orders.OrderRepository
-	withdraw  withdraws.WithDrawRepository
+	repo      repositry.DataRepositories
 	hashServ  hasher.HashBuilder
 	tokenServ jwt.TokenService
 }
 
 func NewHandlers(
 	hashServ hasher.HashBuilder,
-	accRepo accunts.AccountRepository,
-	orderRepo orders.OrderRepository,
-	withdrawRepo withdraws.WithDrawRepository,
+	repo repositry.DataRepositories,
 	tokenServ jwt.TokenService,
 ) *Handlers {
 	return &Handlers{
-		accounts:  accRepo,
-		orders:    orderRepo,
-		withdraw:  withdrawRepo,
+		repo:      repo,
 		hashServ:  hashServ,
 		tokenServ: tokenServ,
 	}

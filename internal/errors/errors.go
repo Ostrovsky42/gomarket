@@ -3,7 +3,6 @@ package errors
 import "fmt"
 
 const (
-	BadRequestJSON      = "Bad request JSON"
 	FailedValidation    = "Failed validation"
 	NotFound            = "Resource not found"
 	InternalServerError = "Internal server error"
@@ -23,14 +22,6 @@ func (e *ErrorApp) Error() string {
 
 func (e *ErrorApp) Description() string {
 	return e.description
-}
-
-func (e *ErrorApp) Details() any {
-	return e.details
-}
-
-func NewErrBadRequestJSON(details any) *ErrorApp {
-	return NewError(BadRequestJSON, details)
 }
 
 func NewErrFailedValidation(details any) *ErrorApp {

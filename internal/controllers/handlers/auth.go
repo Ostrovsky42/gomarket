@@ -3,9 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"gomarket/internal/errors"
 	"gomarket/internal/logger"
-	"net/http"
 )
 
 type AccountAuth struct {
@@ -30,7 +31,7 @@ func (h *Handlers) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, errApp := h.accounts.CreateAccount(r.Context(), req.Login, h.hashServ.GetHash(req.Password))
+	id, errApp := h.repo.Accounts.CreateAccount(r.Context(), req.Login, h.hashServ.GetHash(req.Password))
 	if errApp != nil {
 		if errApp.Description() == errors.UniquenessViolation {
 			w.WriteHeader(http.StatusConflict)
@@ -70,7 +71,7 @@ func (h *Handlers) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	account, errApp := h.accounts.GetAccountByLogin(r.Context(), req.Login)
+	account, errApp := h.repo.Accounts.GetAccountByLogin(r.Context(), req.Login)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed create account")
 		w.WriteHeader(http.StatusInternalServerError)

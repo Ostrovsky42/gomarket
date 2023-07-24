@@ -15,6 +15,7 @@ const (
 	timeout         = 10
 	workerInterval  = 5
 	attemptInterval = 2
+	maxAttempts     = 3
 )
 
 type Processor struct {
@@ -70,7 +71,6 @@ func (a *Processor) processOrder(orderID string) error {
 		return err
 	}
 
-	maxAttempts := 3
 	for attempt := 0; attempt < maxAttempts; attempt++ {
 		resp, err := a.HTTPClient.Do(req)
 		if err != nil {
@@ -79,7 +79,6 @@ func (a *Processor) processOrder(orderID string) error {
 			time.Sleep(attemptInterval * time.Second)
 			continue
 		}
-
 		defer resp.Body.Close()
 
 		if resp.StatusCode == http.StatusOK {
@@ -87,6 +86,10 @@ func (a *Processor) processOrder(orderID string) error {
 			err = json.NewDecoder(resp.Body).Decode(&orderResponse)
 			if err != nil {
 				return err
+			}
+
+			if err = resp.Body.Close(); err != nil {
+				return fmt.Errorf("resp.Body.Close :%w", err)
 			}
 
 			errApp := a.OrderRepository.UpdateAfterAccrual(context.Background(),
@@ -99,6 +102,10 @@ func (a *Processor) processOrder(orderID string) error {
 			}
 
 			return nil
+		}
+
+		if err = resp.Body.Close(); err != nil {
+			return fmt.Errorf("resp.Body.Close :%w", err)
 		}
 
 		logger.Log.Info().Int("status_code", resp.StatusCode).Msg("unexpected status code")

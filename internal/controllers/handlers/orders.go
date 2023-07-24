@@ -36,7 +36,7 @@ func (h *Handlers) LoadOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, errApp := h.orders.GetOrderByID(ctx, orderID)
+	order, errApp := h.repo.Orders.GetOrderByID(ctx, orderID)
 	if errApp != nil {
 		if errApp.Description() != errors.NotFound {
 			logger.Log.Error().Err(errApp).Msg("failed get order")
@@ -57,7 +57,7 @@ func (h *Handlers) LoadOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errApp = h.orders.CreateOrder(ctx, orderID, accountID)
+	errApp = h.repo.Orders.CreateOrder(ctx, orderID, accountID)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed create order")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -78,7 +78,7 @@ func (h *Handlers) GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orders, errApp := h.orders.GetOrdersByAccountID(ctx, accountID)
+	orders, errApp := h.repo.Orders.GetOrdersByAccountID(ctx, accountID)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed get orders by account_id")
 		w.WriteHeader(http.StatusInternalServerError)
