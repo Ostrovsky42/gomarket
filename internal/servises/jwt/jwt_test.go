@@ -25,7 +25,6 @@ func TestGenerateToken(t *testing.T) {
 }
 
 func TestVerifyInvalidToken(t *testing.T) {
-	secretKey := "secret-key"
 	tokenExpirationSec := 3600
 
 	tokenService := NewJWTService(secretKey, tokenExpirationSec)
@@ -36,7 +35,6 @@ func TestVerifyInvalidToken(t *testing.T) {
 }
 
 func TestTokenExpired(t *testing.T) {
-	secretKey := "secret-key"
 	tokenExpirationSec := 1
 
 	tokenService := NewJWTService(secretKey, tokenExpirationSec)
