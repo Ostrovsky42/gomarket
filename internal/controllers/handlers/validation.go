@@ -7,10 +7,10 @@ import (
 )
 
 const (
-	MinNumLogin = 4
-	MaxNumLogin = 20
-	MinNumPass  = 6
-	MaxNumPass  = 40
+	minNumLogin = 4
+	maxNumLogin = 20
+	minNumPass  = 6
+	maxNumPass  = 40
 )
 
 var loginMask = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
@@ -20,11 +20,7 @@ func ValidationAuth(login string, pass string) *errors.ErrorApp {
 		return err
 	}
 
-	if err := validatePassword(pass); err != nil {
-		return err
-	}
-
-	return nil
+	return validatePassword(pass)
 }
 
 func ValidateLoadOrder(orderID string) *errors.ErrorApp {
@@ -35,12 +31,28 @@ func ValidateLoadOrder(orderID string) *errors.ErrorApp {
 	return nil
 }
 
+func ValidateUsePoints(orderID string, points float64) *errors.ErrorApp {
+	if isValidOrderID(orderID) {
+		return errors.NewErrFailedValidation("invalid order_id")
+	}
+
+	return validatePoints(points)
+}
+
+func validatePoints(points float64) *errors.ErrorApp {
+	if points < 0 {
+		return errors.NewErrFailedValidation("less zero")
+	}
+
+	return nil
+}
+
 func validateLogin(login string) *errors.ErrorApp {
 	if !loginMask.MatchString(login) {
 		return errors.NewErrFailedValidation("invalid login")
 	}
 
-	if len(login) < MinNumLogin || len(login) > MaxNumLogin {
+	if len(login) < minNumLogin || len(login) > maxNumLogin {
 		return errors.NewErrFailedValidation("invalid login")
 	}
 
@@ -48,13 +60,14 @@ func validateLogin(login string) *errors.ErrorApp {
 }
 
 func validatePassword(password string) *errors.ErrorApp {
-	if len(password) < MinNumPass || len(password) > MaxNumPass {
+	if len(password) < minNumPass || len(password) > maxNumPass {
 		return errors.NewErrFailedValidation("invalid password")
 	}
 
 	return nil
 }
 
+// nolint:gomnd
 func isValidOrderID(orderID string) bool {
 	if _, err := strconv.Atoi(orderID); err != nil {
 		return true
@@ -62,7 +75,9 @@ func isValidOrderID(orderID string) bool {
 
 	sum := 0
 	alternate := false
-	for i := len(orderID) - 1; i >= 0; i-- {
+
+	i := len(orderID) - 1
+	for ; i >= 0; i-- {
 		digit := int(orderID[i] - '0')
 		if alternate {
 			digit *= 2

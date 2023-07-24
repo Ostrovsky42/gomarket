@@ -1,6 +1,9 @@
 package context
 
-import "context"
+import (
+	"context"
+	"gomarket/internal/errors"
+)
 
 type ctxKey string
 
@@ -10,12 +13,12 @@ func WithAccountID(ctx context.Context, id string) context.Context {
 	return context.WithValue(ctx, accountID, id)
 }
 
-func AccountID(ctx context.Context) string {
+func GetAccountID(ctx context.Context) (string, *errors.ErrorApp) {
 	if temp := ctx.Value(accountID); temp != nil {
 		if id, ok := temp.(string); ok {
-			return id
+			return id, nil
 		}
 	}
 
-	return ""
+	return "", errors.NewError("account_id is empty", nil)
 }

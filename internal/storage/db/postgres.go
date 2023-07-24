@@ -4,11 +4,12 @@ import (
 	"context"
 	"database/sql"
 
+	"gomarket/internal/logger"
+
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"gomarket/internal/logger"
 )
 
 const migrationPath = "./migrations"
@@ -44,8 +45,8 @@ func (p *Postgres) upMigration() {
 	db, err := p.DB.Acquire(context.Background())
 	if err != nil {
 		logger.Log.Fatal().Err(err).Msg("failde Acquire conn")
-
 	}
+
 	defer db.Release()
 
 	sqlDB, err := sql.Open("postgres", db.Conn().Config().ConnString())

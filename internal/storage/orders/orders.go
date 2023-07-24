@@ -3,12 +3,15 @@ package orders
 import (
 	"context"
 	stdErr "errors"
-	"github.com/jackc/pgx/v4"
+	"time"
+
 	"gomarket/internal/entities"
 	"gomarket/internal/errors"
 	"gomarket/internal/storage"
 	"gomarket/internal/storage/db"
-	"time"
+
+	"github.com/jackc/pgx/v4"
+	"github.com/rs/zerolog/log"
 )
 
 type OrderRepository interface {
@@ -36,13 +39,12 @@ func (o *OrderPG) CreateOrder(ctx context.Context, orderID string, accountID str
 	defer cancel()
 
 	q := `INSERT INTO orders (id, account_id, status, uploaded_at)  VALUES ($1, $2, $3, $4)`
-	_, err := o.pg.DB.Exec(ctx, q,
+	if _, err := o.pg.DB.Exec(ctx, q,
 		orderID,
 		accountID,
 		entities.New,
 		time.Now(),
-	)
-	if err != nil {
+	); err != nil {
 		if storage.IsUniqueViolation(err) {
 			return errors.NewErrUniquenessViolation(err.Error())
 		}
@@ -59,15 +61,14 @@ func (o *OrderPG) GetOrderByID(ctx context.Context, orderID string) (*entities.O
 
 	q := `SELECT id, account_id, status, points  FROM orders WHERE id = $1`
 	var order entities.Order
-	err := o.pg.DB.QueryRow(ctx, q,
+	if err := o.pg.DB.QueryRow(ctx, q,
 		orderID,
 	).Scan(
 		&order.ID,
 		&order.AccountID,
 		&order.Status,
 		&order.Points,
-	)
-	if err != nil {
+	); err != nil {
 		if storage.IsNotFound(err) {
 			return nil, errors.NewErrNotFound()
 		}
@@ -166,6 +167,12 @@ func (o *OrderPG) UpdateAfterAccrual(ctx context.Context, orderID string, status
 		return errors.NewErrInternal(err.Error())
 	}
 
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil && !stdErr.Is(err, pgx.ErrTxClosed) {
+			log.Error().Err(err).Msg("failed to rollback TX")
+		}
+	}()
+
 	var accountID string
 	q := `UPDATE orders SET status = $2, points = $3 WHERE id = $1 RETURNING account_id`
 	err = tx.QueryRow(ctx, q,
@@ -174,7 +181,6 @@ func (o *OrderPG) UpdateAfterAccrual(ctx context.Context, orderID string, status
 		points,
 	).Scan(&accountID)
 	if err != nil {
-		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
 
@@ -184,7 +190,6 @@ func (o *OrderPG) UpdateAfterAccrual(ctx context.Context, orderID string, status
 		accountID,
 	).Scan(&balance)
 	if err != nil {
-		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
 
@@ -197,13 +202,11 @@ func (o *OrderPG) UpdateAfterAccrual(ctx context.Context, orderID string, status
 	)
 
 	if err != nil {
-		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
 

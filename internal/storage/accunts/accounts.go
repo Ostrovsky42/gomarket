@@ -2,10 +2,15 @@ package accunts
 
 import (
 	"context"
+	stdErr "errors"
+
 	"gomarket/internal/entities"
 	"gomarket/internal/errors"
+	"gomarket/internal/logger"
 	"gomarket/internal/storage"
 	"gomarket/internal/storage/db"
+
+	"github.com/jackc/pgx/v4"
 )
 
 type AccountRepository interface {
@@ -98,29 +103,31 @@ func (a *AccountPG) UpdateAccountBalance(ctx context.Context, accountID string, 
 		return errors.NewErrInternal(err.Error())
 	}
 
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil && !stdErr.Is(err, pgx.ErrTxClosed) {
+			logger.Log.Error().Err(err).Msg("failed to rollback TX")
+		}
+	}()
+
 	var balance float64
 	q := `SELECT points FROM accounts WHERE id = $1 FOR UPDATE`
 	err = tx.QueryRow(ctx, q, accountID).Scan(&balance)
 	if err != nil {
-		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
 
 	if balance+delta < 0 {
-		tx.Rollback(ctx)
 		return errors.NewErrInsufficientFunds()
 	}
 
 	q = `UPDATE accounts SET points = $2 WHERE id = $1`
 	_, err = tx.Exec(ctx, q, accountID, balance+delta)
 	if err != nil {
-		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
 

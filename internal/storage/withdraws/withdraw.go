@@ -1,4 +1,4 @@
-package withdraw
+package withdraws
 
 import (
 	"context"

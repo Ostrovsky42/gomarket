@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"encoding/json"
+	"gomarket/internal/context"
 	"gomarket/internal/logger"
 	"net/http"
 )
@@ -13,7 +13,7 @@ type BalanceResponse struct {
 
 func (h *Handlers) GetBalance(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	accountID, errApp := getAccountID(ctx)
+	accountID, errApp := context.GetAccountID(ctx)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed get account_id")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -37,19 +37,8 @@ func (h *Handlers) GetBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	balanceResponse := BalanceResponse{
+	writeOKWithJSON(w, BalanceResponse{
 		Current:   current,
 		Withdrawn: withdrawSum,
-	}
-
-	jsonData, err := json.Marshal(balanceResponse)
-	if err != nil {
-		logger.Log.Error().Err(err).Msg("failed to marshal JSON response")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	setJSONContentType(w)
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonData)
+	})
 }

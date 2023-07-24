@@ -30,7 +30,7 @@ func (h *Handlers) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, errApp := h.accounts.CreateAccount(r.Context(), req.Login, h.hashServ.GetHash(req.Password)) //todo пользователя нет
+	id, errApp := h.accounts.CreateAccount(r.Context(), req.Login, h.hashServ.GetHash(req.Password))
 	if errApp != nil {
 		if errApp.Description() == errors.UniquenessViolation {
 			w.WriteHeader(http.StatusConflict)

@@ -11,7 +11,13 @@ import (
 	"time"
 )
 
-type AccrualProcesser struct {
+const (
+	timeout         = 10
+	workerInterval  = 5
+	attemptInterval = 2
+)
+
+type Processor struct {
 	BaseURL    string
 	HTTPClient *http.Client
 	wg         sync.WaitGroup
@@ -24,25 +30,25 @@ type OrderResponse struct {
 	Points float64 `json:"accrual"`
 }
 
-func NewAccrual(baseURL string, repository orders.OrderRepository) *AccrualProcesser {
-	return &AccrualProcesser{
+func NewAccrual(baseURL string, repository orders.OrderRepository) *Processor {
+	return &Processor{
 		BaseURL:         baseURL,
 		OrderRepository: repository,
 		HTTPClient: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: timeout * time.Second,
 		},
 	}
 }
 
-func (a *AccrualProcesser) Run() {
+func (a *Processor) Run() {
 	go a.worker()
 }
 
-func (a *AccrualProcesser) worker() {
+func (a *Processor) worker() {
 	for {
 		orderIDs, errApp := a.OrderRepository.GetOrderIDsForAccrual(context.Background())
 		if errApp != nil || len(orderIDs) == 0 {
-			time.Sleep(5 * time.Second)
+			time.Sleep(workerInterval * time.Second)
 			continue
 		}
 
@@ -57,7 +63,7 @@ func (a *AccrualProcesser) worker() {
 	}
 }
 
-func (a *AccrualProcesser) processOrder(orderID string) error {
+func (a *Processor) processOrder(orderID string) error {
 	url := fmt.Sprintf("%s/api/orders/%s", a.BaseURL, orderID)
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
 	if err != nil {
@@ -70,7 +76,7 @@ func (a *AccrualProcesser) processOrder(orderID string) error {
 		if err != nil {
 			logger.Log.Error().Err(err).Msg("err make request")
 
-			time.Sleep(2 * time.Second)
+			time.Sleep(attemptInterval * time.Second)
 			continue
 		}
 
@@ -94,8 +100,9 @@ func (a *AccrualProcesser) processOrder(orderID string) error {
 
 			return nil
 		}
+
 		logger.Log.Info().Int("status_code", resp.StatusCode).Msg("unexpected status code")
-		time.Sleep(2 * time.Second)
+		time.Sleep(attemptInterval * time.Second)
 	}
 
 	return fmt.Errorf("maximum number of attempts reached, request failed")

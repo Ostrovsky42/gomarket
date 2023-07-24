@@ -5,13 +5,13 @@ import (
 	"gomarket/internal/servises/jwt"
 	"gomarket/internal/storage/accunts"
 	"gomarket/internal/storage/orders"
-	"gomarket/internal/storage/withdraw"
+	"gomarket/internal/storage/withdraws"
 )
 
 type Handlers struct {
 	accounts  accunts.AccountRepository
 	orders    orders.OrderRepository
-	withdraw  withdraw.WithDrawRepository
+	withdraw  withdraws.WithDrawRepository
 	hashServ  hasher.HashBuilder
 	tokenServ jwt.TokenService
 }
@@ -20,7 +20,7 @@ func NewHandlers(
 	hashServ hasher.HashBuilder,
 	accRepo accunts.AccountRepository,
 	orderRepo orders.OrderRepository,
-	withdrawRepo withdraw.WithDrawRepository,
+	withdrawRepo withdraws.WithDrawRepository,
 	tokenServ jwt.TokenService,
 ) *Handlers {
 	return &Handlers{

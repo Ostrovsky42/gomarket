@@ -22,6 +22,7 @@ type Order struct {
 
 func (o Order) MarshalJSON() ([]byte, error) {
 	type OrderAlias Order
+
 	return json.Marshal(&struct {
 		OrderAlias
 		UploadedAt string `json:"uploaded_at"`

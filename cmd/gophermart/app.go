@@ -11,14 +11,19 @@ import (
 	"gomarket/internal/storage/accunts"
 	"gomarket/internal/storage/db"
 	"gomarket/internal/storage/orders"
-	"gomarket/internal/storage/withdraw"
+	"gomarket/internal/storage/withdraws"
 	"net/http"
 	"time"
 )
 
+const (
+	shutdownSec = 5
+	tokenLife   = 600
+)
+
 type Application struct {
 	httpServer *http.Server
-	accrualCli *accrual.AccrualProcesser
+	accrualCli *accrual.Processor
 	pg         *db.Postgres
 }
 
@@ -30,10 +35,10 @@ func NewApp(cfg *config.Config) Application {
 
 	accRepo := accunts.NewAccountPG(pg)
 	orderRepo := orders.NewOrderPG(pg)
-	withdrawRepo := withdraw.NewAccountPG(pg)
+	withdrawRepo := withdraws.NewAccountPG(pg)
 	hashServ := hasher.NewHashGenerator(cfg.SignKey)
 	accrualCli := accrual.NewAccrual(cfg.AccrualHost, orderRepo)
-	tokenServ := jwt.NewJWTService(cfg.SignKey, 6000)
+	tokenServ := jwt.NewJWTService(cfg.SignKey, tokenLife)
 
 	accrualCli.Run()
 	return Application{
@@ -65,11 +70,10 @@ func (a *Application) Run(ctx context.Context) {
 	if err := a.Shutdown(); err != nil {
 		logger.Log.Fatal().Err(err).Msg("failed shutting down server")
 	}
-
 }
 
 func (a *Application) Shutdown() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownSec*time.Second)
 	defer cancel()
 
 	if err := a.httpServer.Shutdown(ctx); err != nil {

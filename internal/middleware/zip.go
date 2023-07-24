@@ -9,9 +9,14 @@ import (
 	"gomarket/internal/logger"
 )
 
+const (
+	acceptEncoding  = "Accept-Encoding"
+	contentEncoding = "Content-Encoding"
+	gzipVal         = "gzip"
+)
+
 type ZipMiddleware struct {
-	zContentTypes []string
-	gzipW         *gzip.Writer
+	gzipW *gzip.Writer
 }
 
 func NewZipMiddleware(level int) ZipMiddleware {
@@ -40,7 +45,7 @@ func (z *ZipMiddleware) Zip(next http.Handler) http.Handler {
 			defer z.gzipW.Flush()
 			defer z.gzipW.Close()
 
-			w.Header().Set("Content-Encoding", "gzip")
+			w.Header().Set(contentEncoding, gzipVal)
 			z.gzipW.Reset(w)
 
 			next.ServeHTTP(&gzipWriter{ResponseWriter: w, gzipW: z.gzipW}, r)
@@ -54,7 +59,7 @@ func (z *ZipMiddleware) Zip(next http.Handler) http.Handler {
 
 func (z *ZipMiddleware) UnZip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
+		if !strings.Contains(r.Header.Get(contentEncoding), gzipVal) {
 			next.ServeHTTP(w, r)
 
 			return
@@ -76,5 +81,5 @@ func (z *ZipMiddleware) UnZip(next http.Handler) http.Handler {
 }
 
 func (z *ZipMiddleware) isNeedZipped(r *http.Request) bool {
-	return strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
+	return strings.Contains(r.Header.Get(acceptEncoding), gzipVal)
 }

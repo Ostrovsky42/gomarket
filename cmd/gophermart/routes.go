@@ -2,10 +2,11 @@ package main
 
 import (
 	"compress/gzip"
+
 	"gomarket/internal/controllers/handlers"
+	"gomarket/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
-	"gomarket/internal/middleware"
 )
 
 func NewRoutes(signKey string, handlers *handlers.Handlers) *chi.Mux {
@@ -21,7 +22,6 @@ func NewRoutes(signKey string, handlers *handlers.Handlers) *chi.Mux {
 		authRoute.Use(middleware.WithLogging, zipMW.Zip, zipMW.UnZip)
 		authRoute.Post(`/api/user/register`, handlers.RegisterHandler)
 		authRoute.Post(`/api/user/login`, handlers.AuthHandler)
-
 	})
 
 	r.Group(func(apiRoute chi.Router) {

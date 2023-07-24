@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"gomarket/internal/context"
 	"gomarket/internal/errors"
 	"gomarket/internal/logger"
 	"net/http"
@@ -19,7 +20,7 @@ func (h *Handlers) LoadOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	accountID, errApp := getAccountID(ctx)
+	accountID, errApp := context.GetAccountID(ctx)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed get account_id")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -69,7 +70,7 @@ func (h *Handlers) LoadOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	accountID, errApp := getAccountID(ctx)
+	accountID, errApp := context.GetAccountID(ctx)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed get account_id")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -89,19 +90,7 @@ func (h *Handlers) GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 
 		return
-
 	}
 
-	jsonData, err := json.Marshal(orders)
-	if err != nil {
-		logger.Log.Error().Err(err).Msg("failed to marshal JSON response")
-		w.WriteHeader(http.StatusInternalServerError)
-
-		return
-	}
-
-	setJSONContentType(w)
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonData)
+	writeOKWithJSON(w, orders)
 }

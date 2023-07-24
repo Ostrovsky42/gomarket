@@ -3,8 +3,9 @@ package config
 import (
 	"flag"
 
-	"github.com/caarlos0/env/v6"
 	"gomarket/internal/logger"
+
+	"github.com/caarlos0/env/v6"
 )
 
 const (

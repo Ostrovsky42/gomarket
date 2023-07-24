@@ -3,8 +3,9 @@ package jwt
 import (
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"gomarket/internal/errors"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 type TokenService interface {

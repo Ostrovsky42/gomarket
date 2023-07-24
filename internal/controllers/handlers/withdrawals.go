@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"gomarket/internal/context"
 	"gomarket/internal/entities"
 	"gomarket/internal/errors"
 	"gomarket/internal/logger"
@@ -20,7 +21,7 @@ func (h *Handlers) UsePoints(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	accountID, errApp := getAccountID(ctx)
+	accountID, errApp := context.GetAccountID(ctx)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed get account_id")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -28,7 +29,7 @@ func (h *Handlers) UsePoints(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if errApp = ValidateLoadOrder(req.OrderID); errApp != nil { //todo  use points check negative
+	if errApp = ValidateUsePoints(req.OrderID, req.Sum); errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed validation")
 		w.WriteHeader(http.StatusBadRequest)
 
@@ -58,16 +59,14 @@ func (h *Handlers) UsePoints(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	//todo create order?
 }
 
 func (h *Handlers) UsePointsInfo(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	accountID, errApp := getAccountID(ctx)
+	accountID, errApp := context.GetAccountID(ctx)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed get account_id")
 		w.WriteHeader(http.StatusUnauthorized)
-
 		return
 	}
 
@@ -85,15 +84,5 @@ func (h *Handlers) UsePointsInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonData, err := json.Marshal(withdraw)
-	if err != nil {
-		logger.Log.Error().Err(err).Msg("failed to marshal JSON response")
-		w.WriteHeader(http.StatusInternalServerError)
-
-		return
-	}
-
-	setJSONContentType(w)
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonData)
+	writeOKWithJSON(w, withdraw)
 }
