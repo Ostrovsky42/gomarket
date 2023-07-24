@@ -82,6 +82,7 @@ func (a *AccrualProcesser) processOrder(orderID string) error {
 			if err != nil {
 				return err
 			}
+			logger.Log.Info().Interface("resp", orderResponse).Msg("accrual")
 
 			errApp := a.OrderRepository.UpdateAfterAccrual(context.Background(),
 				orderResponse.Order,
