@@ -31,7 +31,7 @@ func (h *Handlers) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, errApp := h.repo.Accounts.CreateAccount(r.Context(), req.Login, h.hashServ.GetHash(req.Password))
+	id, errApp := h.repo.Accounts.CreateAccount(r.Context(), req.Login, h.serv.Hash.GetHash(req.Password))
 	if errApp != nil {
 		if errApp.Description() == errors.UniquenessViolation {
 			w.WriteHeader(http.StatusConflict)
@@ -78,7 +78,7 @@ func (h *Handlers) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash := h.hashServ.GetHash(req.Password)
+	hash := h.serv.Hash.GetHash(req.Password)
 	if account.HashPass != hash {
 		logger.Log.Info().Msg("failed compare hash password")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -97,7 +97,7 @@ func (h *Handlers) AuthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) setJWT(w http.ResponseWriter, accountID string) error {
-	jwt, err := h.tokenServ.GenerateToken(accountID)
+	jwt, err := h.serv.Token.GenerateToken(accountID)
 	if err != nil {
 		return err
 	}

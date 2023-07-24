@@ -79,7 +79,6 @@ func (a *Processor) processOrder(orderID string) error {
 			time.Sleep(attemptInterval * time.Second)
 			continue
 		}
-		defer resp.Body.Close()
 
 		if resp.StatusCode == http.StatusOK {
 			var orderResponse OrderResponse

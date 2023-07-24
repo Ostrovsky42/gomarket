@@ -11,10 +11,8 @@ import (
 func main() {
 	logger.InitLogger()
 
-	cfg := config.GetConfig()
-
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	NewApp(cfg).Run(ctx)
+	NewApp(config.GetConfig()).Run(ctx)
 }

@@ -2,21 +2,20 @@ package main
 
 import (
 	"context"
-	"gomarket/config"
-	"gomarket/internal/controllers/handlers"
-	"gomarket/internal/logger"
-	"gomarket/internal/repositry"
-	"gomarket/internal/servises/accrual"
-	"gomarket/internal/servises/hasher"
-	"gomarket/internal/servises/jwt"
-	"gomarket/internal/storage/db"
 	"net/http"
 	"time"
+
+	"gomarket/config"
+	"gomarket/internal/controllers/handlers"
+	"gomarket/internal/external/accrual"
+	"gomarket/internal/logger"
+	"gomarket/internal/repositry"
+	"gomarket/internal/servises"
+	"gomarket/internal/storage/db"
 )
 
 const (
 	shutdownSec = 5
-	tokenLife   = 600
 )
 
 type Application struct {
@@ -32,17 +31,16 @@ func NewApp(cfg *config.Config) *Application {
 	}
 
 	repo := repositry.NewRepo(pg)
-	hashServ := hasher.NewHashGenerator(cfg.SignKey)
-	tokenServ := jwt.NewJWTService(cfg.SignKey, tokenLife)
+	services := servises.NewService(cfg.SignKey)
+
 	accrualCli := accrual.NewAccrual(cfg.AccrualHost, repo.Orders)
 
 	return &Application{
 		httpServer: &http.Server{
 			Addr: cfg.ServerHost,
 			Handler: NewRoutes(cfg.SignKey, handlers.NewHandlers(
-				hashServ,
 				repo,
-				tokenServ,
+				services,
 			))},
 		pg:         pg,
 		accrualCli: accrualCli,

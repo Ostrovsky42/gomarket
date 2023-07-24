@@ -13,8 +13,8 @@ type DataRepositories struct {
 	Withdraws withdraws.WithDrawRepository
 }
 
-func NewRepo(pg *db.Postgres) DataRepositories {
-	return DataRepositories{
+func NewRepo(pg *db.Postgres) *DataRepositories {
+	return &DataRepositories{
 		Accounts:  accounts.NewAccountPG(pg),
 		Orders:    orders.NewOrderPG(pg),
 		Withdraws: withdraws.NewAccountPG(pg),
