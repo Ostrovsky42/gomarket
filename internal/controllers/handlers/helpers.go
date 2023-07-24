@@ -26,5 +26,5 @@ func getAccountID(ctx contextStd.Context) (string, *errors.ErrorApp) {
 }
 
 func transferToNegative(val float64) float64 {
-	return -100 * val
+	return -1 * val
 }
