@@ -6,7 +6,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"gomarket/internal/entities"
 	"gomarket/internal/errors"
-	"gomarket/internal/logger"
 	"gomarket/internal/storage"
 	"gomarket/internal/storage/db"
 	"time"
@@ -166,7 +165,6 @@ func (o *OrderPG) UpdateAfterAccrual(ctx context.Context, orderID string, status
 	if err != nil {
 		return errors.NewErrInternal(err.Error())
 	}
-	defer tx.Rollback(ctx)
 
 	var accountID string
 	q := `UPDATE orders SET status = $2, points = $3 WHERE id = $1 RETURNING account_id`
@@ -176,6 +174,7 @@ func (o *OrderPG) UpdateAfterAccrual(ctx context.Context, orderID string, status
 		points,
 	).Scan(&accountID)
 	if err != nil {
+		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
 
@@ -185,14 +184,9 @@ func (o *OrderPG) UpdateAfterAccrual(ctx context.Context, orderID string, status
 		accountID,
 	).Scan(&balance)
 	if err != nil {
+		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
-
-	logger.Log.Debug().
-		Interface("balance", balance).
-		Interface("points", points).
-		Interface("balance+points", balance+points).
-		Send()
 
 	q = `UPDATE accounts SET points = $2 where id = $1`
 	_, err = tx.Exec(
@@ -203,11 +197,13 @@ func (o *OrderPG) UpdateAfterAccrual(ctx context.Context, orderID string, status
 	)
 
 	if err != nil {
+		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
+		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
 

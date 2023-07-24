@@ -2,8 +2,6 @@ package accunts
 
 import (
 	"context"
-	"gomarket/internal/logger"
-
 	"gomarket/internal/entities"
 	"gomarket/internal/errors"
 	"gomarket/internal/storage"
@@ -99,36 +97,30 @@ func (a *AccountPG) UpdateAccountBalance(ctx context.Context, accountID string, 
 	if err != nil {
 		return errors.NewErrInternal(err.Error())
 	}
-	defer tx.Rollback(ctx)
 
 	var balance float64
 	q := `SELECT points FROM accounts WHERE id = $1 FOR UPDATE`
-	err = tx.QueryRow(ctx, q,
-		accountID,
-	).Scan(&balance)
+	err = tx.QueryRow(ctx, q, accountID).Scan(&balance)
 	if err != nil {
+		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
-	logger.Log.Debug().
-		Interface("balance", balance).
-		Interface("delta", delta).
-		Interface("sum", balance+delta).Send()
 
 	if balance+delta < 0 {
+		tx.Rollback(ctx)
 		return errors.NewErrInsufficientFunds()
 	}
 
 	q = `UPDATE accounts SET points = $2 WHERE id = $1`
-	_, err = tx.Query(ctx, q,
-		accountID,
-		delta,
-	)
+	_, err = tx.Exec(ctx, q, accountID, delta)
 	if err != nil {
+		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
+		tx.Rollback(ctx)
 		return errors.NewErrInternal(err.Error())
 	}
 
