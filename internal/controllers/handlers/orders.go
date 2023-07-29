@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"gomarket/internal/context"
+	"gomarket/internal/accountctx"
 	"gomarket/internal/errors"
 	"gomarket/internal/logger"
 	"net/http"
@@ -20,7 +20,7 @@ func (h *Handlers) LoadOrderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	accountID, errApp := context.GetAccountID(ctx)
+	accountID, errApp := accountctx.GetAccountID(ctx)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed get account_id")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -70,7 +70,7 @@ func (h *Handlers) LoadOrderHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	accountID, errApp := context.GetAccountID(ctx)
+	accountID, errApp := accountctx.GetAccountID(ctx)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed get account_id")
 		w.WriteHeader(http.StatusUnauthorized)

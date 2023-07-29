@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"gomarket/internal/context"
+	"gomarket/internal/accountctx"
 	"gomarket/internal/logger"
 	"net/http"
 )
@@ -13,7 +13,7 @@ type BalanceResponse struct {
 
 func (h *Handlers) GetBalance(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	accountID, errApp := context.GetAccountID(ctx)
+	accountID, errApp := accountctx.GetAccountID(ctx)
 	if errApp != nil {
 		logger.Log.Error().Err(errApp).Msg("failed get account_id")
 		w.WriteHeader(http.StatusUnauthorized)

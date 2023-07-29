@@ -120,8 +120,8 @@ func (a *AccountPG) UpdateAccountBalance(ctx context.Context, accountID string, 
 		return errors.NewErrInsufficientFunds()
 	}
 
-	q = `UPDATE accounts SET points = $2 WHERE id = $1`
-	_, err = tx.Exec(ctx, q, accountID, balance+delta)
+	q = `UPDATE accounts SET points = points+ $2 WHERE id = $1`
+	_, err = tx.Exec(ctx, q, accountID, delta)
 	if err != nil {
 		return errors.NewErrInternal(err.Error())
 	}

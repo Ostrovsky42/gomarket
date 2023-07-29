@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"gomarket/internal/context"
+	"gomarket/internal/accountctx"
 	"gomarket/internal/servises/jwt"
 	"net/http"
 	"strings"
@@ -28,7 +28,7 @@ func (a *Auth) Auth(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithAccountID(r.Context(), accountID)
+		ctx := accountctx.WithAccountID(r.Context(), accountID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

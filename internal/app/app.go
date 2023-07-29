@@ -1,16 +1,17 @@
-package main
+package app
 
 import (
 	"context"
+	"gomarket/internal/app/routes"
 	"net/http"
 	"time"
 
 	"gomarket/config"
 	"gomarket/internal/controllers/handlers"
-	"gomarket/internal/external/accrual"
 	"gomarket/internal/logger"
 	"gomarket/internal/repositry"
 	"gomarket/internal/servises"
+	"gomarket/internal/servises/accrual"
 	"gomarket/internal/storage/db"
 )
 
@@ -38,7 +39,7 @@ func NewApp(cfg *config.Config) *Application {
 	return &Application{
 		httpServer: &http.Server{
 			Addr: cfg.ServerHost,
-			Handler: NewRoutes(cfg.SignKey, handlers.NewHandlers(
+			Handler: routes.NewRoutes(cfg.SignKey, handlers.NewHandlers(
 				repo,
 				services,
 			))},
