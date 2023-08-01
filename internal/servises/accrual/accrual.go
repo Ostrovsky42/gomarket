@@ -32,7 +32,9 @@ func (a *Processor) worker() {
 	for {
 		orderIDs, errApp := a.OrderRepository.GetOrderIDsForAccrual(context.Background())
 		if errApp != nil || len(orderIDs) == 0 {
+			logger.Log.Error().Err(errApp).Msg("failed get order_ids for process order")
 			time.Sleep(workerInterval * time.Second)
+
 			continue
 		}
 

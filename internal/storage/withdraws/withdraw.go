@@ -21,7 +21,7 @@ type WithDrawPG struct {
 	pg *db.Postgres
 }
 
-func NewAccountPG(db *db.Postgres) *WithDrawPG {
+func New(db *db.Postgres) *WithDrawPG {
 	return &WithDrawPG{
 		pg: db,
 	}

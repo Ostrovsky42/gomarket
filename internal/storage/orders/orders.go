@@ -28,7 +28,7 @@ type OrderPG struct {
 	pg *db.Postgres
 }
 
-func NewOrderPG(db *db.Postgres) *OrderPG {
+func New(db *db.Postgres) *OrderPG {
 	return &OrderPG{
 		pg: db,
 	}
@@ -124,7 +124,7 @@ func (o *OrderPG) GetOrderIDsForAccrual(ctx context.Context) ([]string, *errors.
 	ctx, cancel := context.WithTimeout(ctx, storage.DefaultQueryTimeout)
 	defer cancel()
 
-	q := `SELECT id  FROM orders WHERE status IN ($1)`
+	q := `SELECT id  FROM orders WHERE status IN ($1) LIMIT 100`
 	rows, err := o.pg.DB.Query(ctx, q,
 		entities.New,
 	)

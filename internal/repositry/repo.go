@@ -15,8 +15,8 @@ type DataRepositories struct {
 
 func NewRepo(pg *db.Postgres) *DataRepositories {
 	return &DataRepositories{
-		Accounts:  accounts.NewAccountPG(pg),
-		Orders:    orders.NewOrderPG(pg),
-		Withdraws: withdraws.NewAccountPG(pg),
+		Accounts:  accounts.New(pg),
+		Orders:    orders.New(pg),
+		Withdraws: withdraws.New(pg),
 	}
 }

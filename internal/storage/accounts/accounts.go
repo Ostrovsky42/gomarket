@@ -26,7 +26,7 @@ type AccountPG struct {
 	pg *db.Postgres
 }
 
-func NewAccountPG(db *db.Postgres) *AccountPG {
+func New(db *db.Postgres) *AccountPG {
 	return &AccountPG{
 		pg: db,
 	}
