@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"context"
-	"gomarket/internal/repositry/mock"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,9 +12,9 @@ import (
 
 	"gomarket/internal/entities"
 	"gomarket/internal/errors"
+	"gomarket/internal/mocks"
 	"gomarket/internal/repositry"
 	"gomarket/internal/servises"
-	"gomarket/internal/storage_mock"
 )
 
 func TestHandlers_RegisterHandler(t *testing.T) {
@@ -36,10 +35,10 @@ func TestHandlers_RegisterHandler(t *testing.T) {
 			repo: func() *repositry.DataRepositories {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
-				re := storage_mock.NewMockAccountRepository(ctrl)
+				re := mocks.NewMockAccountRepository(ctrl)
 				re.EXPECT().CreateAccount(ctx, "testuser", serv.Hash.GetHash("testpass")).
 					Return("accountID123", nil).AnyTimes()
-				return mock.NewMockRepo(re, nil, nil)
+				return mocks.NewMockRepo(re, nil, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -56,10 +55,10 @@ func TestHandlers_RegisterHandler(t *testing.T) {
 			repo: func() *repositry.DataRepositories {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
-				re := storage_mock.NewMockAccountRepository(ctrl)
+				re := mocks.NewMockAccountRepository(ctrl)
 				re.EXPECT().CreateAccount(ctx, "testuser", serv.Hash.GetHash("testpass")).
 					Return("", errors.NewErrUniquenessViolation(nil)).AnyTimes()
-				return mock.NewMockRepo(re, nil, nil)
+				return mocks.NewMockRepo(re, nil, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -76,8 +75,8 @@ func TestHandlers_RegisterHandler(t *testing.T) {
 			repo: func() *repositry.DataRepositories {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
-				re := storage_mock.NewMockAccountRepository(ctrl)
-				return mock.NewMockRepo(re, nil, nil)
+				re := mocks.NewMockAccountRepository(ctrl)
+				return mocks.NewMockRepo(re, nil, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -127,13 +126,13 @@ func TestHandlers_AuthHandler(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
 
-				re := storage_mock.NewMockAccountRepository(ctrl)
+				re := mocks.NewMockAccountRepository(ctrl)
 				re.EXPECT().GetAccountByLogin(ctx, "testuser").
 					Return(entities.Account{
 						ID:       "accountID123",
 						HashPass: serv.Hash.GetHash("testpass"),
 					}, nil).AnyTimes()
-				return mock.NewMockRepo(re, nil, nil)
+				return mocks.NewMockRepo(re, nil, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -151,13 +150,13 @@ func TestHandlers_AuthHandler(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
 
-				re := storage_mock.NewMockAccountRepository(ctrl)
+				re := mocks.NewMockAccountRepository(ctrl)
 				re.EXPECT().GetAccountByLogin(ctx, "testuser").
 					Return(entities.Account{
 						ID:       "accountID123",
 						HashPass: serv.Hash.GetHash("wrongPassword"),
 					}, nil).AnyTimes()
-				return mock.NewMockRepo(re, nil, nil)
+				return mocks.NewMockRepo(re, nil, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),

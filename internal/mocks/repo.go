@@ -1,15 +1,14 @@
 // nolint:revive
-package mock
+package mocks
 
 import (
 	"gomarket/internal/repositry"
-	"gomarket/internal/storage_mock"
 )
 
 func NewMockRepo(
-	account *storage_mock.MockAccountRepository,
-	orders *storage_mock.MockOrderRepository,
-	withdraw *storage_mock.MockWithDrawRepository,
+	account *MockAccountRepository,
+	orders *MockOrderRepository,
+	withdraw *MockWithDrawRepository,
 ) *repositry.DataRepositories {
 	return &repositry.DataRepositories{
 		Accounts:  account,

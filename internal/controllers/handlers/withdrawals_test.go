@@ -3,8 +3,6 @@ package handlers
 import (
 	"bytes"
 	"context"
-	"gomarket/internal/entities"
-	"gomarket/internal/errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,10 +11,11 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"gomarket/internal/accountctx"
+	"gomarket/internal/entities"
+	"gomarket/internal/errors"
+	"gomarket/internal/mocks"
 	"gomarket/internal/repositry"
-	"gomarket/internal/repositry/mock"
 	"gomarket/internal/servises"
-	"gomarket/internal/storage_mock"
 )
 
 const sum = 3.14
@@ -39,11 +38,11 @@ func TestHandlers_UsePoints(t *testing.T) {
 			repo: func() *repositry.DataRepositories {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
-				acc := storage_mock.NewMockAccountRepository(ctrl)
+				acc := mocks.NewMockAccountRepository(ctrl)
 				acc.EXPECT().UpdateAccountBalance(ctx, "accountID123", transferToNegative(sum)).Return(nil).AnyTimes()
-				with := storage_mock.NewMockWithDrawRepository(ctrl)
+				with := mocks.NewMockWithDrawRepository(ctrl)
 				with.EXPECT().CreateWithdraw(ctx, "accountID123", "4111111111111111", sum).Return(nil).AnyTimes()
-				return mock.NewMockRepo(acc, nil, with)
+				return mocks.NewMockRepo(acc, nil, with)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -60,9 +59,9 @@ func TestHandlers_UsePoints(t *testing.T) {
 			repo: func() *repositry.DataRepositories {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
-				acc := storage_mock.NewMockAccountRepository(ctrl)
+				acc := mocks.NewMockAccountRepository(ctrl)
 				acc.EXPECT().UpdateAccountBalance(ctx, "accountID123", transferToNegative(sum)).Return(errors.NewErrInsufficientFunds()).AnyTimes()
-				return mock.NewMockRepo(acc, nil, nil)
+				return mocks.NewMockRepo(acc, nil, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -77,7 +76,7 @@ func TestHandlers_UsePoints(t *testing.T) {
 		{
 			name: "Unauthorized",
 			repo: func() *repositry.DataRepositories {
-				return mock.NewMockRepo(nil, nil, nil)
+				return mocks.NewMockRepo(nil, nil, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -121,7 +120,7 @@ func TestHandlers_UsePointsInfo(t *testing.T) {
 			repo: func() *repositry.DataRepositories {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
-				with := storage_mock.NewMockWithDrawRepository(ctrl)
+				with := mocks.NewMockWithDrawRepository(ctrl)
 				with.EXPECT().GetWithdraw(ctx, "accountID123").
 					Return([]entities.Withdraw{
 						{
@@ -132,7 +131,7 @@ func TestHandlers_UsePointsInfo(t *testing.T) {
 							Sum:     2.34,
 						},
 					}, nil).AnyTimes()
-				return mock.NewMockRepo(nil, nil, with)
+				return mocks.NewMockRepo(nil, nil, with)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -149,10 +148,10 @@ func TestHandlers_UsePointsInfo(t *testing.T) {
 			repo: func() *repositry.DataRepositories {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
-				with := storage_mock.NewMockWithDrawRepository(ctrl)
+				with := mocks.NewMockWithDrawRepository(ctrl)
 				with.EXPECT().GetWithdraw(ctx, "accountID123").
 					Return([]entities.Withdraw{}, nil).AnyTimes()
-				return mock.NewMockRepo(nil, nil, with)
+				return mocks.NewMockRepo(nil, nil, with)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -166,7 +165,7 @@ func TestHandlers_UsePointsInfo(t *testing.T) {
 		{
 			name: "Unauthorized",
 			repo: func() *repositry.DataRepositories {
-				return mock.NewMockRepo(nil, nil, nil)
+				return mocks.NewMockRepo(nil, nil, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),

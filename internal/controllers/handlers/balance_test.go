@@ -2,18 +2,17 @@ package handlers
 
 import (
 	"context"
-	"gomarket/internal/repositry/mock"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"gomarket/internal/accountctx"
-	"gomarket/internal/repositry"
-	"gomarket/internal/servises"
-	"gomarket/internal/storage_mock"
-
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+
+	"gomarket/internal/accountctx"
+	"gomarket/internal/mocks"
+	"gomarket/internal/repositry"
+	"gomarket/internal/servises"
 )
 
 var float = 3.14
@@ -37,11 +36,11 @@ func TestHandlers_GetBalance(t *testing.T) {
 			repo: func() *repositry.DataRepositories {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
-				acc := storage_mock.NewMockAccountRepository(ctrl)
+				acc := mocks.NewMockAccountRepository(ctrl)
 				acc.EXPECT().GetAccountBalance(ctx, "accountID123").Return(float, nil).AnyTimes()
-				with := storage_mock.NewMockWithDrawRepository(ctrl)
+				with := mocks.NewMockWithDrawRepository(ctrl)
 				with.EXPECT().GetWithdrawSum(ctx, "accountID123").Return(&float, nil).AnyTimes()
-				return mock.NewMockRepo(acc, nil, with)
+				return mocks.NewMockRepo(acc, nil, with)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -56,7 +55,7 @@ func TestHandlers_GetBalance(t *testing.T) {
 		{
 			name: "Unauthorized",
 			repo: func() *repositry.DataRepositories {
-				return mock.NewMockRepo(nil, nil, nil)
+				return mocks.NewMockRepo(nil, nil, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),

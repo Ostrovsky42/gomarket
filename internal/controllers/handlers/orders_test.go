@@ -3,20 +3,19 @@ package handlers
 import (
 	"bytes"
 	"context"
-	"gomarket/internal/repositry/mock"
+	"gomarket/internal/mocks"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 
 	"gomarket/internal/accountctx"
 	"gomarket/internal/entities"
 	"gomarket/internal/errors"
 	"gomarket/internal/repositry"
 	"gomarket/internal/servises"
-	"gomarket/internal/storage_mock"
-
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/mock/gomock"
 )
 
 func TestHandlers_GetOrderHandler(t *testing.T) {
@@ -38,7 +37,7 @@ func TestHandlers_GetOrderHandler(t *testing.T) {
 			repo: func() *repositry.DataRepositories {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
-				order := storage_mock.NewMockOrderRepository(ctrl)
+				order := mocks.NewMockOrderRepository(ctrl)
 				order.EXPECT().GetOrdersByAccountID(ctx, "accountID123").
 					Return([]entities.Order{
 						{
@@ -49,7 +48,7 @@ func TestHandlers_GetOrderHandler(t *testing.T) {
 							Status: entities.New,
 						},
 					}, nil).AnyTimes()
-				return mock.NewMockRepo(nil, order, nil)
+				return mocks.NewMockRepo(nil, order, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -66,9 +65,9 @@ func TestHandlers_GetOrderHandler(t *testing.T) {
 			repo: func() *repositry.DataRepositories {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
-				order := storage_mock.NewMockOrderRepository(ctrl)
+				order := mocks.NewMockOrderRepository(ctrl)
 				order.EXPECT().GetOrdersByAccountID(ctx, "accountID123").Return([]entities.Order{}, nil).AnyTimes()
-				return mock.NewMockRepo(nil, order, nil)
+				return mocks.NewMockRepo(nil, order, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -111,10 +110,10 @@ func TestHandlers_LoadOrderHandler(t *testing.T) {
 			repo: func() *repositry.DataRepositories {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
-				order := storage_mock.NewMockOrderRepository(ctrl)
+				order := mocks.NewMockOrderRepository(ctrl)
 				order.EXPECT().GetOrderByID(ctx, "30569309025904").Return(nil, errors.NewErrNotFound()).AnyTimes()
 				order.EXPECT().CreateOrder(ctx, "30569309025904", "accountID123").Return(nil).AnyTimes()
-				return mock.NewMockRepo(nil, order, nil)
+				return mocks.NewMockRepo(nil, order, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -131,9 +130,9 @@ func TestHandlers_LoadOrderHandler(t *testing.T) {
 			repo: func() *repositry.DataRepositories {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
-				order := storage_mock.NewMockOrderRepository(ctrl)
+				order := mocks.NewMockOrderRepository(ctrl)
 				order.EXPECT().GetOrderByID(ctx, "30569309025904").Return(&entities.Order{AccountID: "Conflict"}, nil).AnyTimes()
-				return mock.NewMockRepo(nil, order, nil)
+				return mocks.NewMockRepo(nil, order, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
@@ -148,7 +147,7 @@ func TestHandlers_LoadOrderHandler(t *testing.T) {
 		{
 			name: "Failed validate order",
 			repo: func() *repositry.DataRepositories {
-				return mock.NewMockRepo(nil, nil, nil)
+				return mocks.NewMockRepo(nil, nil, nil)
 			}(),
 			args: args{
 				w: httptest.NewRecorder(),
