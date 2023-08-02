@@ -18,6 +18,7 @@ import (
 var float = 3.14
 
 func TestHandlers_GetBalance(t *testing.T) {
+	var ctrl *gomock.Controller
 	serv := servises.NewService("secret")
 	ctx := accountctx.WithAccountID(context.Background(), "accountID123")
 	type args struct {
@@ -34,12 +35,11 @@ func TestHandlers_GetBalance(t *testing.T) {
 		{
 			name: "Successful Received Balance",
 			repo: func() *repositry.DataRepositories {
-				ctrl := gomock.NewController(t)
-				defer ctrl.Finish()
+				ctrl = gomock.NewController(t)
 				acc := mocks.NewMockAccountRepository(ctrl)
-				acc.EXPECT().GetAccountBalance(ctx, "accountID123").Return(float, nil).AnyTimes()
+				acc.EXPECT().GetAccountBalance(ctx, "accountID123").Return(float, nil).Times(1)
 				with := mocks.NewMockWithDrawRepository(ctrl)
-				with.EXPECT().GetWithdrawSum(ctx, "accountID123").Return(&float, nil).AnyTimes()
+				with.EXPECT().GetWithdrawSum(ctx, "accountID123").Return(&float, nil).Times(1)
 				return mocks.NewMockRepo(acc, nil, with)
 			}(),
 			args: args{
@@ -78,4 +78,5 @@ func TestHandlers_GetBalance(t *testing.T) {
 		assert.Equal(t, tt.wantCode, tt.args.w.Code)
 		assert.Equal(t, tt.wantBody, tt.args.w.Body.String())
 	}
+	ctrl.Finish()
 }
