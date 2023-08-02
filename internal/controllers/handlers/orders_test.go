@@ -19,7 +19,7 @@ import (
 )
 
 func TestHandlers_GetOrderHandler(t *testing.T) {
-	var ctrl *gomock.Controller
+	ctrl := gomock.NewController(t)
 	serv := servises.NewService("secret")
 	ctx := accountctx.WithAccountID(context.Background(), "accountID123")
 	type args struct {
@@ -36,7 +36,6 @@ func TestHandlers_GetOrderHandler(t *testing.T) {
 		{
 			name: "Successful get order",
 			repo: func() *repositry.DataRepositories {
-				ctrl = gomock.NewController(t)
 				order := mocks.NewMockOrderRepository(ctrl)
 				order.EXPECT().GetOrdersByAccountID(ctx, "accountID123").
 					Return([]entities.Order{
@@ -63,7 +62,6 @@ func TestHandlers_GetOrderHandler(t *testing.T) {
 		{
 			name: "Successful get order",
 			repo: func() *repositry.DataRepositories {
-				ctrl = gomock.NewController(t)
 				order := mocks.NewMockOrderRepository(ctrl)
 				order.EXPECT().GetOrdersByAccountID(ctx, "accountID123").Return([]entities.Order{}, nil).Times(1)
 				return mocks.NewMockRepo(nil, order, nil)
@@ -93,7 +91,7 @@ func TestHandlers_GetOrderHandler(t *testing.T) {
 }
 
 func TestHandlers_LoadOrderHandler(t *testing.T) {
-	var ctrl *gomock.Controller
+	ctrl := gomock.NewController(t)
 	serv := servises.NewService("secret")
 	ctx := accountctx.WithAccountID(context.Background(), "accountID123")
 	type args struct {
@@ -109,7 +107,6 @@ func TestHandlers_LoadOrderHandler(t *testing.T) {
 		{
 			name: "Successful Load order",
 			repo: func() *repositry.DataRepositories {
-				ctrl = gomock.NewController(t)
 				order := mocks.NewMockOrderRepository(ctrl)
 				order.EXPECT().GetOrderByID(ctx, "30569309025904").Return(nil, errors.NewErrNotFound()).Times(1)
 				order.EXPECT().CreateOrder(ctx, "30569309025904", "accountID123").Return(nil).Times(1)
@@ -128,7 +125,6 @@ func TestHandlers_LoadOrderHandler(t *testing.T) {
 		{
 			name: "Conflict Load order",
 			repo: func() *repositry.DataRepositories {
-				ctrl = gomock.NewController(t)
 				order := mocks.NewMockOrderRepository(ctrl)
 				order.EXPECT().GetOrderByID(ctx, "30569309025904").Return(&entities.Order{AccountID: "Conflict"}, nil).Times(1)
 				return mocks.NewMockRepo(nil, order, nil)

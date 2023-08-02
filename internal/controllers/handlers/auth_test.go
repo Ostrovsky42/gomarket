@@ -18,7 +18,7 @@ import (
 )
 
 func TestHandlers_RegisterHandler(t *testing.T) {
-	var ctrl *gomock.Controller
+	ctrl := gomock.NewController(t)
 	serv := servises.NewService("secret")
 	ctx := context.Background()
 	type args struct {
@@ -34,7 +34,6 @@ func TestHandlers_RegisterHandler(t *testing.T) {
 		{
 			name: "Successful registration",
 			repo: func() *repositry.DataRepositories {
-				ctrl = gomock.NewController(t)
 				re := mocks.NewMockAccountRepository(ctrl)
 				re.EXPECT().CreateAccount(ctx, "testuser", serv.Hash.GetHash("testpass")).
 					Return("accountID123", nil).Times(1)
@@ -53,7 +52,6 @@ func TestHandlers_RegisterHandler(t *testing.T) {
 		{
 			name: "Conflict registration",
 			repo: func() *repositry.DataRepositories {
-				ctrl = gomock.NewController(t)
 				re := mocks.NewMockAccountRepository(ctrl)
 				re.EXPECT().CreateAccount(ctx, "testuser", serv.Hash.GetHash("testpass")).
 					Return("", errors.NewErrUniquenessViolation(nil)).Times(1)
@@ -72,7 +70,6 @@ func TestHandlers_RegisterHandler(t *testing.T) {
 		{
 			name: "Failed validation",
 			repo: func() *repositry.DataRepositories {
-				ctrl = gomock.NewController(t)
 				re := mocks.NewMockAccountRepository(ctrl)
 				return mocks.NewMockRepo(re, nil, nil)
 			}(),
@@ -107,7 +104,7 @@ func TestHandlers_RegisterHandler(t *testing.T) {
 }
 
 func TestHandlers_AuthHandler(t *testing.T) {
-	var ctrl *gomock.Controller
+	ctrl := gomock.NewController(t)
 	serv := servises.NewService("secret")
 	ctx := context.Background()
 	type args struct {
@@ -123,7 +120,6 @@ func TestHandlers_AuthHandler(t *testing.T) {
 		{
 			name: "Successful auth",
 			repo: func() *repositry.DataRepositories {
-				ctrl = gomock.NewController(t)
 				re := mocks.NewMockAccountRepository(ctrl)
 				re.EXPECT().GetAccountByLogin(ctx, "testuser").
 					Return(entities.Account{
@@ -145,7 +141,6 @@ func TestHandlers_AuthHandler(t *testing.T) {
 		{
 			name: "Wrong pass",
 			repo: func() *repositry.DataRepositories {
-				ctrl = gomock.NewController(t)
 				re := mocks.NewMockAccountRepository(ctrl)
 				re.EXPECT().GetAccountByLogin(ctx, "testuser").
 					Return(entities.Account{

@@ -21,7 +21,7 @@ import (
 const sum = 3.14
 
 func TestHandlers_UsePoints(t *testing.T) {
-	var ctrl *gomock.Controller
+	ctrl := gomock.NewController(t)
 	serv := servises.NewService("secret")
 	ctx := accountctx.WithAccountID(context.Background(), "accountID123")
 	type args struct {
@@ -37,7 +37,6 @@ func TestHandlers_UsePoints(t *testing.T) {
 		{
 			name: "Successful Use Points",
 			repo: func() *repositry.DataRepositories {
-				ctrl = gomock.NewController(t)
 				acc := mocks.NewMockAccountRepository(ctrl)
 				acc.EXPECT().UpdateAccountBalance(ctx, "accountID123", transferToNegative(sum)).Return(nil).Times(1)
 				with := mocks.NewMockWithDrawRepository(ctrl)
@@ -57,7 +56,6 @@ func TestHandlers_UsePoints(t *testing.T) {
 		{
 			name: "InsufficientFunds",
 			repo: func() *repositry.DataRepositories {
-				ctrl = gomock.NewController(t)
 				acc := mocks.NewMockAccountRepository(ctrl)
 				acc.EXPECT().UpdateAccountBalance(ctx, "accountID123", transferToNegative(sum)).Return(errors.NewErrInsufficientFunds()).Times(1)
 				return mocks.NewMockRepo(acc, nil, nil)
@@ -102,7 +100,7 @@ func TestHandlers_UsePoints(t *testing.T) {
 }
 
 func TestHandlers_UsePointsInfo(t *testing.T) {
-	var ctrl *gomock.Controller
+	ctrl := gomock.NewController(t)
 	serv := servises.NewService("secret")
 	ctx := accountctx.WithAccountID(context.Background(), "accountID123")
 	type args struct {
@@ -119,7 +117,6 @@ func TestHandlers_UsePointsInfo(t *testing.T) {
 		{
 			name: "Successful Use Points Info ",
 			repo: func() *repositry.DataRepositories {
-				ctrl = gomock.NewController(t)
 				with := mocks.NewMockWithDrawRepository(ctrl)
 				with.EXPECT().GetWithdraw(ctx, "accountID123").
 					Return([]entities.Withdraw{
@@ -146,7 +143,6 @@ func TestHandlers_UsePointsInfo(t *testing.T) {
 		{
 			name: "No content Use Points Info ",
 			repo: func() *repositry.DataRepositories {
-				ctrl = gomock.NewController(t)
 				with := mocks.NewMockWithDrawRepository(ctrl)
 				with.EXPECT().GetWithdraw(ctx, "accountID123").
 					Return([]entities.Withdraw{}, nil).Times(1)
